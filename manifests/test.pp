@@ -26,10 +26,10 @@ class smx_1password::test(
       message=>"1Password record for ${test_exists} exists? ${test3}" 
     }
 
-    $test1 = op::default_vault()
-    notify { "op-test-1": withpath=>false,
-      message=>"1Password: default vault: ${test1}" 
-    }
+#    $test1 = op::default_vault()
+#    notify { "op-test-1": withpath=>false,
+#      message=>"1Password: default vault: ${test1}" 
+#    }
 
     $test5 = op::get_secret( $test_get )
     notify { "op-test-5": withpath=>false,

@@ -36,7 +36,7 @@ define password(
         $uname = $username
     }
     if ! $vault {
-        $cvault = $op::default_vault()
+        $cvault = op::default_vault()
     } else {
         $cvault = $vault
     }

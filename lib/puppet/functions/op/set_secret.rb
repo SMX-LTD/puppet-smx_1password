@@ -17,7 +17,7 @@ Puppet::Functions.create_function(:'op::set_secret') do
     return_type 'Boolean' 
   end
 
-  def set_secret(secretname,newpass,vault,exact=true,apikey=nil,endpoint=nil)
+  def set_secret(secretname,newpass,vault=nil,exact=true,apikey=nil,endpoint=nil)
     begin
       # Obtain a onepassword object
       op = Puppet::Util::OnePassword.op_connect(apikey,endpoint)

@@ -3,7 +3,7 @@ pwage = nil
 test = {}
 uids = {}
 # For just the system users
-maxuid = 500
+maxuid = 999
 # For ALL users
 maxuid = 100000
 

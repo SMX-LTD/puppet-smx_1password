@@ -16,9 +16,10 @@ Puppet::Functions.create_function(:'op::set_secret') do
     optional_param 'String', :endpoint
     return_type 'Boolean' 
   end
+
   def set_secret(secretname,newpass,vault,exact=true,apikey=nil,endpoint=nil)
     begin
-      # Obtail a onepassword object
+      # Obtain a onepassword object
       op = Puppet::Util::OnePassword.op_connect(apikey,endpoint)
 
       if op.nil? {
@@ -63,23 +64,27 @@ Puppet::Functions.create_function(:'op::set_secret') do
 
       if itemid
         # update the item
-        # Identify the field to update
         # retrieve complete item
         item = op.item(
           vault_id: vaultid,
           id: itemid
         )
+        # Identify the field to update
         # identify the first PASSWORD purpose field
         path = nil
         item.fields.each { |f|
           if f.purpose == 'PASSWORD'
-            path = '/'
+            path = '/fields/' + f.id + '/value'
             break
           end
         } # fields
+        if ! path
+          raise( "fail: Cannot locate password field in secret #{secretname}" )
+          return false
+        end
 
         attributes = [
-          { op: "replace", path: "", value: newpass }
+          { op: 'replace', path: path, value: newpass }
         ]
         item = op.update_item(
           vault_id: vaultid, 
@@ -87,32 +92,64 @@ Puppet::Functions.create_function(:'op::set_secret') do
           body: attributes
         )
       else
+        # we need to create a new secret
+
+        # Identify vault to use
+        vault = Puppet::Util::OnePassword.op_default_vault() if ! vault
+        v = op.vaults filter: "title eq '#{vault}'"
+        if ! v 
+          raise( "fail: Cannot identify 1Password vault '#{vault}'" )
+          return false
+        end
+         
+        # Identify username, if we can
+        username = secretname.sub( /@.*/, "" ).sub( /^.*:\/*/, "" )
+
         # Create the item
-attributes = {
-  vault: {
-    id: vault.id
-  },
-  title: "Secrets Automation Item",
-  category: "LOGIN",
-  fields: [
-    {
-      value: "wendy",
-      purpose: "USERNAME"
-    },
-    {
-      purpose: "PASSWORD",
-      generate: true,
-      recipe: {
-        length: 55,
-        characterSets: ["LETTERS", "DIGITS"]
-      }
-    }
-  ]
-  # …
-}
+        attributes = {
+          vault: {
+            id: v.id
+          },
+          title: secretname,
+          category: "LOGIN",
+          tags: [
+            "puppet"
+          ],
+          fields: [
+            {
+              value: username,
+              purpose: "USERNAME",
+              id: "username"
+              label: "username"
+              type: "STRING"
+            },
+            {
+              id: "password",
+              type: "CONCEALED",
+              purpose: "PASSWORD",
+              label: "password",
+              value: newpass,
+            },
+            {
+              id: "notesPlain",
+              type: "STRING",
+              purpose: "NOTES",
+              label: "notesPlain",
+              value: "Created by puppet module"
+            }
+          ],
+          files: [
+          ]
+        }
 
-        item = op.create_item(vault_id: vault, body: attributes)
-
+        item = op.create_item(vault_id: v.id, body: attributes)
+        if item
+          return true
+        else
+          Puppet.send_log(:warning, "unknown: 1Password item create ERROR: #{$!}" )
+          raise( "unknown: 1Password item create ERROR: #{$!}" )
+          return false
+        end
       end
 
     rescue

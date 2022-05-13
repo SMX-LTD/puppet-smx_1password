@@ -1,0 +1,90 @@
+Steve Shipway
+SMX
+
+Requires op_connect Ruby Gem to be installed on Puppet Master: 
+'gem install op_connect'
+
+# PARAMETERS
+
+Set these in the init.pp file
+
+   $op_hostname = 'opconnect.company.com'
+   $op_apikey   = 'xxxxxx'
+   $op_vault    = 'Drop-box'
+
+# PASSWORD CLASS
+Change password if older than 30 days, updating the 1password.com
+database to reflect changes.
+
+Allows you to have regularly rotating passwords, stored centrally and audited, 
+but with noone actually knowing what they are.
+
+This will also change and update if password is not yet defined 
+It will NOT verify that 1P record contains the correct password though as
+this is not necessarily possible with various backends
+
+Only users with UID<500 are checked; to change this, edit the facter module
+to set facts for ALL users. (see comments at start of lib/facter/password.rb )
+Note that ubuntu/debian people may wish to make this threshold <1000 instead.
+
+Facter should set facts: pwage_(.*) for all accounts <500
+
+To use:
+   op::password { 'root': }
+   op::password { 'oracle': maxage=>60, vault=>'Oracle Passwords' }
+
+Attributes:
+   maxage: number of days old a password must be before it gets auto changed
+           default is 30
+   vault: which vault to place the secret into, if not the default
+   username: (namevar) username to set password for
+   minchange: minimum number of days before password can be changed by user
+           default is 0 (may not be supported by your unix)
+
+1Password:
+   The new password secure is of type 
+   The secret name is $username@$fqdn
+
+Assumptions:
+   2. The specified vault exists, is writeable, and defaults to appropriate
+      sharing rules
+   3. All passwords for servers are shared with the puppet user
+   4. All newly created passwords will be with standard type
+   5. Passwords can be changed via /usr/sbin/chpasswd (install this if it is
+      not present).  This works for ubuntu, debian, redhat, centos, fedora,
+      and solaris (if chpasswd is installed from sunfreeware)
+   6. Password ages are in /etc/shadow in standard format (OK for redhat, 
+      centos, fedora, ubuntu, debian, solaris)
+   7. OnePassword API available
+
+# SSL CERTIFICATE CLASS
+This will synchronise certificate/key files on the client with the certificate
+and key data held in the cloud.
+
+It will optionally restart Apache after making changes.
+
+Allows you to have certificates stored centrally, and multiple servers using 
+the same certificate automatically updated together by puppet.
+
+Should also work with Windows if you have service=>false and specify a
+windows file location with key=> and crt=>, though this is not tested.
+
+To use:
+op::cert { 'www.auckland.ac.nz': }
+op::cert { $fqdn: cert=>"/foo/bar/${fqdn}.pem"; }
+
+Attributes:
+  key, crt: Specify alternate locations for the files.  Default is to put them
+    into /etc/httpd/conf/$name.crt and /etc/httpd/conf/$name.key
+  op: set to false if you want it to pull from a file instead of 1password
+
+1Password:
+  The certificates MUST be stored in an object with a Certificate template.
+  The secret name MUST correspond exactly to the namevar.
+
+Assumptions:
+  1. The puppet master must have read access to the certificate secret
+  2. The files are stored in the correct format.  No conversion or validation
+     is performed.
+  3. 1Password API 7.6 or later available
+

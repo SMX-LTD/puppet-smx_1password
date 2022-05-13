@@ -4,9 +4,6 @@
 # on the server (the best place to put it)
 
 class smx_1password ( 
-  Optional[String] $endpoint,
-  Optional[String] $apikey,
-  Optional[Integer] $password_length = 10,
   Optional[Hash] $user_passwords = {}
 ) {
 	# Make sure the puppet master has access to the api server, and

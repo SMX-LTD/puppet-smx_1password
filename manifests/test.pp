@@ -11,14 +11,19 @@ class smx_1password::test(
       message=>"Running 1Password module tests" 
     }
 
-    $test1 = op::default_vault()
-    notify { "op-test-1": withpath=>false,
-      message=>"1Password: default vault: ${test1}" 
-    }
-
     $test2 = password_age($test_exists)
     notify { "op-test-2": withpath=>false,
       message=>"1Password: Age of password for ${test_exists} is ${test2}" 
+    }
+
+    $test4 = generate_password(10)
+    notify { "op-test-4": withpath=>false,
+      message=>"Random password = ${test4}" 
+    }
+
+    $test1 = op::default_vault()
+    notify { "op-test-1": withpath=>false,
+      message=>"1Password: default vault: ${test1}" 
     }
 
     $test3 = op::check("${test_exists}\@${fqdn}")
@@ -26,11 +31,6 @@ class smx_1password::test(
       message=>"1Password record for ${test_exists} exists? ${test3}" 
     }
 
-    $test4 = generate_password(10)
-    notify { "op-test-4": withpath=>false,
-      message=>"Random password = ${test4}" 
-    }
-   
     $test5 = op::get_secret( $test_get )
     notify { "op-test-5": withpath=>false,
       message=>"Password for ${test_get} = ${test5}" 
@@ -45,7 +45,6 @@ class smx_1password::test(
     notify { "op-test-7": withpath=>false,
       message=>"Set 1password record for ${test_set}: ${test7}" 
     }
-
 
   } else {
     notify { "op-test-1": withpath=>false,

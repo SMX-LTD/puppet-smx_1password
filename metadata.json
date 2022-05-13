@@ -1,13 +1,9 @@
 {
-  "types": [
-  ],
-  "description": "Module to integrate Puppet with 1Password Cloud.\nThis manages passwords, regularly rotating them and ensuring they are\nstored in the SecretServer database as Unix Password objects.\nIt also synchronises certificate and key files on the client with Certificate\nobjects in the database.",
-  "source": "UNKNOWN",
-  "summary": "Integration with 1Password to manage passwords and certificates",
-  "author": "Steve Shipway",
-  "dependencies": [
-  ],
-  "license": "GPLv2 or later",
-  "version": "1.0.0",
   "name": "smx-1password",
+  "version": "1.0.0",
+  "author": "Steve Shipway",
+  "summary": "Integration with 1Password to manage passwords and certificates",
+  "license": "GPLv2 or later",
+  "source": "https://gitlab.com/SMX-LTD/puppet-smx_1password.git",
 }
+

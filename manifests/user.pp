@@ -24,8 +24,8 @@
 # This adds a new username to check for expiry
 define smx_1password::user(
   Integer $maxage = 30,
-  Optional[String] $username,  # defaults to the namevar
-  Optional[String] $vault,
+  Optional[String] $username = undef,  # defaults to the namevar
+  Optional[String] $vault = undef,
   Optional[Integer] $minreset = 0,
   Optional[Integer] $password_length = 12
 ) {
@@ -41,7 +41,7 @@ define smx_1password::user(
         $cvault = $vault
     }
     $age_account = password_age($uname)
-    $opexists = op::check("${uname}\@${fqdn}")
+    $opexists = op::check("${uname}@${fqdn}")
     notice ( "Password for ${uname} has age of ${age_account} : 1Password record = ${opexists}" )
     if ( $age_account < 0 ) {
       notify { "op-secret-$uname": withpath=>false,
@@ -57,10 +57,10 @@ define smx_1password::user(
           # change password for account
           notice( "Updating password for $uname on $fqdn" )
           $newpass = generate_password($password_length)
-          $rv = op::set_secret("${uname}\@${fqdn}",$newpass,$cvault)
+          $rv = op::set_secret("${uname}@${fqdn}",$newpass,$cvault)
           if ! $rv  {
             notify { "op-secret-$uname": withpath=>false,
-              message=>"ERROR: 1Password password update FAILED for $uname@$fqdn: $rv" }
+              message=>"ERROR: 1Password password update FAILED for ${uname}@${fqdn}: ${rv}" }
           } else {
             notify { "op-secret-$uname": withpath=>false,
               message=>"1Password password updated for $uname@$fqdn" }

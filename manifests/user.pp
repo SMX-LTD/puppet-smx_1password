@@ -22,7 +22,7 @@
 #    6. Password ages are in /etc/shadow in standard format
 
 # This adds a new username to check for expiry
-define password(
+define smx_1password::user(
   Integer $maxage = 30,
   Optional[String] $username,  # defaults to the namevar
   Optional[String] $vault,

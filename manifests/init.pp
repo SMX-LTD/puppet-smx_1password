@@ -8,9 +8,9 @@ class smx_1password (
   Optional[String] $apikey,
   Optional[Integer] $password_length = 10,
   Optional[Hash] $user_passwords = {}
-{
+) {
 	# Make sure the puppet master has access to the api server, and
 	# the API key is correct
 
-    create_resources( password, $user_passwords )
+    create_resources( 'smx_1password::user', $user_passwords )
 }

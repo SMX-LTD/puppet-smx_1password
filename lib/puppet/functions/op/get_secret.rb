@@ -21,7 +21,7 @@ Puppet::Functions.create_function(:'op::get_secret') do
   def get_secret(secretname,exact=true,apikey=nil,endpoint=nil)
     begin
       # Obtail a onepassword object
-      op = Puppet::Util::OnePassword.op_connect(apikey,endpoint)
+      op = Puppet::Util::Onepassword.op_connect(apikey,endpoint)
 
       if op.nil? 
         raise( "unknown: Unable to connect to 1Password" )

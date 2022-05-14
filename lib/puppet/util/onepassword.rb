@@ -1,7 +1,7 @@
 require 'op_connect'
 
 module Puppet::Util
- class OnePassword
+ class Onepassword
 
   def op_connect(apikey=nil,endpoint=nil)
     # Check local 1password.yaml file for defaults, if not set

@@ -33,8 +33,8 @@ Puppet::Functions.create_function(:'op::check') do
         end
       }
       return false
-    rescue
-      raise( "unknown: 1Password lookup ERROR: #{$!}" )
+    rescue => error
+      raise( "unknown: 1Password lookup ERROR: #{error}" )
       return nil
     end
     raise( "unknown: Unable to connect to 1Password - how did I get here?" )

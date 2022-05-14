@@ -2,7 +2,7 @@
 # Create a new secret if necessary
 
 # require File.expand_path('../../../util/onepassword', __FILE__)
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', '..'))
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', '..', '..'))
 require 'puppet/util/onepassword'
 require 'op_connect'
 

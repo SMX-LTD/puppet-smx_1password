@@ -6,7 +6,7 @@
 # op_connect ruby doc: https://github.com/partydrone/connect-sdk-ruby
 
 # require File.expand_path('../../../util/onepassword', __FILE__)
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', '..'))
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', '..', '..'))
 require 'puppet/util/onepassword'
 require 'op_connect'
 

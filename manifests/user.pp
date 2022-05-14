@@ -10,8 +10,8 @@
 # To use:
 #    Make sure necessary settings are in the server 1password.yml, or
 #    defined in Heira
-#    password{ root: }
-#    password{ oracle: maxage=>60, vault=>'Oracle Passwords' }
+#    op::user { root: }
+#    op::user { oracle: maxage=>60, vault=>'Oracle Passwords' }
 #
 # Assumptions:
 #    2. The specified vault exists, is writeable, and defaults to appropriate
@@ -22,7 +22,7 @@
 #    6. Password ages are in /etc/shadow in standard format
 
 # This adds a new username to check for expiry
-define smx_1password::user(
+define op::user(
   Integer $maxage = 30,
   Optional[String] $username = undef,  # defaults to the namevar
   Optional[String] $vault = undef,

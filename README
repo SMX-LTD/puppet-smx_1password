@@ -6,11 +6,11 @@ Requires op_connect Ruby Gem to be installed on Puppet Master:
 
 # PARAMETERS
 
-Set these in the init.pp file
+Set these in Heira or in the 1password.yml on the server(s)
 
-   $op_hostname = 'opconnect.company.com'
-   $op_apikey   = 'xxxxxx'
-   $op_vault    = 'Drop-box'
+apikey
+endpoint
+default_vault
 
 # PASSWORD CLASS
 Change password if older than 30 days, updating the 1password.com
@@ -30,8 +30,8 @@ Note that ubuntu/debian people may wish to make this threshold <1000 instead.
 Facter should set facts: pwage_(.*) for all accounts <500
 
 To use:
-   op::password { 'root': }
-   op::password { 'oracle': maxage=>60, vault=>'Oracle Passwords' }
+   op::user { 'root': }
+   op::user { 'oracle': maxage=>60, vault=>'Oracle Passwords' }
 
 Attributes:
    maxage: number of days old a password must be before it gets auto changed

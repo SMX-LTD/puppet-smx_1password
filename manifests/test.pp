@@ -1,11 +1,13 @@
 # Run some tests
 
-class smx_1password::test(
+class op::test(
   Boolean $active = false,
   String $test_exists = 'root',
   String $test_get = 'op3',
   String $test_set = 'op4',
 ) {
+  include op
+
   if $active {
     notify { "op-test-0": withpath=>false,
       message=>"Running 1Password module tests" 
@@ -26,10 +28,10 @@ class smx_1password::test(
       message=>"1Password record for ${test_exists} exists? ${test3}" 
     }
 
-#    $test1 = op::default_vault()
-#    notify { "op-test-1": withpath=>false,
-#      message=>"1Password: default vault: ${test1}" 
-#    }
+    $test1 = op::default_vault()
+    notify { "op-test-1": withpath=>false,
+      message=>"1Password: default vault: ${test1}" 
+    }
 
     $test5 = op::get_secret( $test_get )
     notify { "op-test-5": withpath=>false,

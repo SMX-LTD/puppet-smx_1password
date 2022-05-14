@@ -65,9 +65,9 @@ Puppet::Functions.create_function(:'op::get_secret') do
           end
         end
       } # vaults
-    rescue => error
-      raise( "unknown: 1Password lookup ERROR: #{error}" )
-      return nil
+#    rescue => error
+#      raise( "unknown: 1Password lookup ERROR: #{error}" )
+#      return nil
     end
     # not found in 1Password database
     return nil

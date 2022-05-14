@@ -22,10 +22,10 @@ Puppet::Functions.create_function(:'op::set_secret') do
       # Obtain a onepassword object
       op = Puppet::Util::OnePassword.op_connect(apikey,endpoint)
 
-      if op.nil? {
+      if op.nil? 
         raise( "unknown: Unable to connect to 1Password" )
         return false
-      }
+      end
 
 	  if Puppet[:noop] or Puppet.settings['noop']
 	    warn( "1Password will NOT be updated as in --noop mode" )
@@ -152,9 +152,9 @@ Puppet::Functions.create_function(:'op::set_secret') do
         end
       end
 
-#    rescue => error
-#      raise( "unknown: 1Password update ERROR: #{error}" )
-#      return nil
+    rescue => error
+      raise( "unknown: 1Password update ERROR: #{error}" )
+      return nil
     end
     raise( "unknown: Unable to connect to 1Password - how did I get here?" )
     return nil

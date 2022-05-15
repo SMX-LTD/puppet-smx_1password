@@ -3,7 +3,16 @@ require 'op_connect'
 module Puppet::Util
   class OnePassword
 
-  def op_connect(apikey=nil,endpoint=nil)
+  # class attributes
+  @@c_endpoint = nil
+  @@c_apikey = nil
+  @@c_defaultvault = nil
+
+  def initialize()
+  end
+
+  # Define class method
+  def self.op_connect(apikey=nil,endpoint=nil)
     # Check local 1password.yaml file for defaults, if not set
     configdir = Puppet.settings[:confdir]
     defconfigfile = configdir + '/1password.yml'
@@ -32,6 +41,8 @@ module Puppet::Util
     # set options
     OpConnect.api_endpoint = "https://" + endpoint
     OpConnect.access_token = apikey
+    @@c_endpoint = 'https://' + endpoint
+    @@c_apikey = apikey
 
     begin
       op = OpConnect::Client.new()
@@ -42,7 +53,7 @@ module Puppet::Util
     op
   end
 
-  def op_default_vault()
+  def self.op_default_vault()
     configdir = Puppet.settings[:confdir]
     defconfigfile = configdir + '/1password.yml'
     configfile = call_function( 'lookup', 'op::configfile' )
@@ -61,11 +72,17 @@ module Puppet::Util
       }
     end
     if defaults['default_vault']
+      @@c_defaultvault = defaults['default_vault']
       return defaults['default_vault']
     else
+      @@c_defaultvault = 'Default Vault'
       return 'Default Vault'
     end
   end
+  
+  # Any instance methods?
+
+  # Any private methods?
   
  end
 end

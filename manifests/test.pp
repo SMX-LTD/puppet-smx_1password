@@ -23,14 +23,14 @@ class op::test(
       message=>"Random password = ${test4}" 
     }
 
-    $test3 = op::check("${test_exists}@${fqdn}")
-    notify { "op-test-3": withpath=>false,
-      message=>"1Password record for ${test_exists} exists? ${test3}" 
-    }
-
     $test1 = op::default_vault()
     notify { "op-test-1": withpath=>false,
       message=>"1Password: default vault: ${test1}" 
+    }
+
+    $test3 = op::check("${test_exists}@${fqdn}")
+    notify { "op-test-3": withpath=>false,
+      message=>"1Password record for ${test_exists} exists? ${test3}" 
     }
 
     $test5 = op::get_secret( $test_get )

@@ -37,7 +37,7 @@ module Puppet::Util
       @@c_apikey = defaults['apikey']
     else
       defaults = {
-        :endpoint => @@c_endpoint
+        :endpoint => @@c_endpoint,
         :apikey => @@c_apikey
       } 
     end
@@ -86,7 +86,6 @@ module Puppet::Util
       }
     end
     if defaults['default_vault']
-      @@c_defaultvault = defaults['default_vault']
       return defaults['default_vault']
     else
       @@c_defaultvault = 'Default Vault'

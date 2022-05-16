@@ -13,24 +13,33 @@ module Puppet::Util
 
   # Define class method
   def self.op_connect(apikey=nil,endpoint=nil)
-    # Check local 1password.yaml file for defaults, if not set
-    configdir = Puppet.settings[:confdir]
-    defconfigfile = configdir + '/1password.yml'
-    configfile = call_function( 'lookup', 'op::configfile' )
-    if configfile.nil?
-      configfile = defconfigfile
-    end
-    if File.exists?(configfile)
-      begin
-        defaults = Puppet::Util::Yaml.safe_load_file(configfile)
-      rescue
-        return nil
+    if @@c_endpoint.nil?
+      # Check local 1password.yaml file for defaults, if not set
+      configdir = Puppet.settings[:confdir]
+      defconfigfile = configdir + '/1password.yml'
+      configfile = Puppet::Pops::Functions::Function.call_function( 'lookup', 'op::configfile' )
+      if configfile.nil?
+        configfile = defconfigfile
       end
+      if File.exists?(configfile)
+        begin
+          defaults = Puppet::Util::Yaml.safe_load_file(configfile)
+        rescue
+          return nil
+        end
+      else
+        defaults = {
+          :endpoint => Puppet::Pops::Functions::Function.call_function( 'lookup', 'op::endpoint' ),
+          :apikey   => Puppet::Pops::Functions::Function.call_function( 'lookup', 'op::apikey' ),
+        }
+      end
+      @@c_endpoint = defaults['endpoint']
+      @@c_apikey = defaults['apikey']
     else
       defaults = {
-        :endpoint => call_function( 'lookup', 'op::endpoint' ),
-        :apikey   => call_function( 'lookup', 'op::apikey' ),
-      }
+        :endpoint =  @@c_endpoint
+        :apikey = @@c_apikey
+      } 
     end
     if endpoint.nil?
       endpoint = defaults['endpoint']
@@ -41,8 +50,6 @@ module Puppet::Util
     # set options
     OpConnect.api_endpoint = "https://" + endpoint
     OpConnect.access_token = apikey
-    @@c_endpoint = 'https://' + endpoint
-    @@c_apikey = apikey
 
     begin
       op = OpConnect::Client.new()
@@ -54,21 +61,28 @@ module Puppet::Util
   end
 
   def self.op_default_vault()
-    configdir = Puppet.settings[:confdir]
-    defconfigfile = configdir + '/1password.yml'
-    configfile = call_function( 'lookup', 'op::configfile' )
-    if configfile.nil?
-      configfile = defconfigfile
-    end
-    if File.exists?(configfile)
-      begin
-        defaults = Puppet::Util::Yaml.safe_load_file(configfile)
-      rescue
-        raise("Unable to load YAML file #{configfile}")
+    if @@c_defaultvault.nil?
+      configdir = Puppet.settings[:confdir]
+      defconfigfile = configdir + '/1password.yml'
+      configfile = Puppet::Pops::Functions::Function.call_function( 'lookup', 'op::configfile' )
+      if configfile.nil?
+        configfile = defconfigfile
       end
+      if File.exists?(configfile)
+        begin
+          defaults = Puppet::Util::Yaml.safe_load_file(configfile)
+        rescue
+          raise("Unable to load YAML file #{configfile}")
+        end
+      else
+        defaults = {
+          :default_vault => Puppet::Pops::Functions::Function.call_function( 'lookup', 'op::default_vault' ),
+        }
+      end
+      @@c_defaultvault = defaults['default_vault']
     else
       defaults = {
-        :default_vault => call_function( 'lookup', 'op::default_vault' ),
+        :default_vault => @@c_defaultvault
       }
     end
     if defaults['default_vault']

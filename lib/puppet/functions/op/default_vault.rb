@@ -1,7 +1,7 @@
 # Return the default vault to use for storing new passwords
 
 # require File.expand_path('../../../util/onepassword', __FILE__)
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', '..'))
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', '..', '..'))
 require 'puppet/util/one_password'
 require 'op_connect'
 

@@ -37,8 +37,8 @@ module Puppet::Util
       @@c_apikey = defaults['apikey']
     else
       defaults = {
-        :endpoint =  @@c_endpoint
-        :apikey = @@c_apikey
+        :endpoint => @@c_endpoint
+        :apikey => @@c_apikey
       } 
     end
     if endpoint.nil?

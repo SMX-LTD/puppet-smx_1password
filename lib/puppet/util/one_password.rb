@@ -9,6 +9,9 @@ module Puppet::Util
   @@c_defaultvault = nil
 
   def initialize()
+    @@c_endpoint = nil
+    @@c_apikey = nil
+    @@c_defaultvault = nil
   end
   def initialize(apikey,endpoint,defaultvault)
     @@c_endpoint = endpoint
@@ -27,7 +30,11 @@ module Puppet::Util
         begin
           defaults = Puppet::Util::Yaml.safe_load_file(configfile)
         rescue
+          raise("Unable to parse YAML file: #{configfile}")
           return nil
+        end
+        if defaults['endpoint'].nil?
+          raise("No endpoint configured in #{configfile}")
         end
       else
         defaults = {
@@ -50,7 +57,7 @@ module Puppet::Util
       apikey = defaults['apikey']
     end
     if endpoint.nil?
-      raise("Unable to identify the endpoint for 1Password API - check #{configfile}")
+      raise("Unable to identify the endpoint for 1Password API : #{Puppet.settings[:confdir]}/1password.yaml")
     end
     # set options
     OpConnect.api_endpoint = "https://" + endpoint + "/v1"
@@ -75,6 +82,7 @@ module Puppet::Util
           defaults = Puppet::Util::Yaml.safe_load_file(configfile)
         rescue
           raise("Unable to load YAML file #{configfile}")
+          return nil
         end
       else
         defaults = {
@@ -87,11 +95,11 @@ module Puppet::Util
         :default_vault => @@c_defaultvault
       }
     end
-    if defaults['default_vault']
-      return defaults['default_vault']
-    else
+    if defaults['default_vault'].nil?
       @@c_defaultvault = 'Default Vault'
       return 'Default Vault'
+    else
+      return defaults['default_vault']
     end
   end
   

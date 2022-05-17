@@ -56,7 +56,7 @@ module Puppet::Util
       apikey = defaults['apikey']
     end
     if endpoint.nil?
-      raise("Unable to identify the endpoint for 1Password API")
+      raise("Unable to identify the endpoint for 1Password API - check #{configfile}")
     end
     # set options
     OpConnect.api_endpoint = "https://" + endpoint

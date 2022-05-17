@@ -53,14 +53,14 @@ module Puppet::Util
       raise("Unable to identify the endpoint for 1Password API - check #{configfile}")
     end
     # set options
-    OpConnect.api_endpoint = "https://" + endpoint
+    OpConnect.api_endpoint = "https://" + endpoint + "/v1"
     OpConnect.access_token = apikey
 
     begin
       op = OpConnect::Client.new()
     rescue
       op = nil
-      raise("1Password: ERROR: Cannot open API at https://#{endpoint}")
+      raise("1Password: ERROR: Cannot open API at https://#{endpoint}/v1")
     end
     op
   end
@@ -68,7 +68,7 @@ module Puppet::Util
   def self.op_default_vault()
     if @@c_defaultvault.nil?
       configdir = Puppet.settings[:confdir]
-      defconfigfile = configdir + '/1password.yml'
+      defconfigfile = configdir + '/1password.yaml'
       configfile = defconfigfile
       if File.exists?(configfile)
         begin

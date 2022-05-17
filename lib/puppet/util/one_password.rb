@@ -10,18 +10,23 @@ module Puppet::Util
 
   def initialize()
   end
+  def initialize(apikey,endpoint,defaultvault)
+    @@c_endpoint = endpoint
+    @@c_apikey = apikey
+    @@c_defaultvault = defaultvault
+  end
 
   # Define class method
   def self.op_connect(apikey=nil,endpoint=nil)
     if @@c_endpoint.nil?
-      scope = closure_scope
+      # scope = closure_scope
       # Check local 1password.yaml file for defaults, if not set
       configdir = Puppet.settings[:confdir]
       defconfigfile = configdir + '/1password.yml'
-      configfile = scope.call_function( 'lookup', 'op::configfile' )
-      if configfile.nil?
+      # configfile = scope.call_function( 'lookup', 'op::configfile' )
+      # if configfile.nil?
         configfile = defconfigfile
-      end
+      # end
       if File.exists?(configfile)
         begin
           defaults = Puppet::Util::Yaml.safe_load_file(configfile)
@@ -30,8 +35,10 @@ module Puppet::Util
         end
       else
         defaults = {
-          :endpoint => scope.call_function( 'lookup', 'op::endpoint' ),
-          :apikey   => scope.call_function( 'lookup', 'op::apikey' ),
+          # :endpoint => scope.call_function( 'lookup', 'op::endpoint' ),
+          # :apikey   => scope.call_function( 'lookup', 'op::apikey' ),
+          :endpoint => nil,
+          :apikey   => nil,
         }
       end
       @@c_endpoint = defaults['endpoint']
@@ -48,6 +55,9 @@ module Puppet::Util
     if apikey.nil?
       apikey = defaults['apikey']
     end
+    if endpoint.nil?
+      raise("Unable to identify the endpoint for 1Password API")
+    end
     # set options
     OpConnect.api_endpoint = "https://" + endpoint
     OpConnect.access_token = apikey
@@ -63,13 +73,13 @@ module Puppet::Util
 
   def self.op_default_vault()
     if @@c_defaultvault.nil?
-      scope = closure_scope
+      # scope = closure_scope
       configdir = Puppet.settings[:confdir]
       defconfigfile = configdir + '/1password.yml'
-      configfile = scope.call_function( 'lookup', 'op::configfile' )
-      if configfile.nil?
+      # configfile = scope.call_function( 'lookup', 'op::configfile' )
+      # if configfile.nil?
         configfile = defconfigfile
-      end
+      # end
       if File.exists?(configfile)
         begin
           defaults = Puppet::Util::Yaml.safe_load_file(configfile)
@@ -78,7 +88,8 @@ module Puppet::Util
         end
       else
         defaults = {
-          :default_vault => scope.call_function( 'lookup', 'op::default_vault' ),
+          # :default_vault => scope.call_function( 'lookup', 'op::default_vault' ),
+          :default_vault => nil,
         }
       end
       @@c_defaultvault = defaults['default_vault']

@@ -16,7 +16,6 @@ Puppet::Functions.create_function(:'op::get_secret') do
     optional_param 'Boolean', :exact
     optional_param 'String', :apikey
     optional_param 'String', :endpoint
-    return_type 'String' 
   end
   def get_secret(secretname,exact=true,apikey=nil,endpoint=nil)
     begin
@@ -25,7 +24,7 @@ Puppet::Functions.create_function(:'op::get_secret') do
 
       if op.nil? 
         raise( "unknown: Unable to connect to 1Password" )
-        return false
+        return nil
       end
 
       vaults = op.vaults
@@ -66,7 +65,7 @@ Puppet::Functions.create_function(:'op::get_secret') do
         end
       } # vaults
     rescue => error
-      raise( "unknown: 1Password lookup ERROR: #{error}" )
+      raise( "unknown: 1Password lookup ERROR: #{error.message}" )
       return nil
     end
     # not found in 1Password database

@@ -20,7 +20,7 @@ Puppet::Functions.create_function(:'op::check') do
 
       if op.nil? 
         raise( "unknown: Unable to connect to 1Password" )
-        return nil
+        return false
       end
 
       vaults = op.vaults
@@ -34,10 +34,10 @@ Puppet::Functions.create_function(:'op::check') do
       }
       return false
     rescue => error
-      raise( "unknown: 1Password lookup ERROR: #{error}" )
-      return nil
+      raise( "unknown: 1Password lookup ERROR: #{error.message}" )
+      return false
     end
     raise( "unknown: Unable to connect to 1Password - how did I get here?" )
-    return nil
+    return false
   end # function
 end # create function

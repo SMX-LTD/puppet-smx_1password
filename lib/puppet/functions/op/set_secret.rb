@@ -153,10 +153,10 @@ Puppet::Functions.create_function(:'op::set_secret') do
       end
 
     rescue => error
-      raise( "unknown: 1Password update ERROR: #{error}" )
-      return nil
+      raise( "unknown: 1Password update ERROR: #{error.message}" )
+      return false
     end
     raise( "unknown: Unable to connect to 1Password - how did I get here?" )
-    return nil
+    return false
   end # function
 end # create function

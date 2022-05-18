@@ -29,20 +29,20 @@ module Puppet::Util
           return nil
         end
         if defaults['endpoint'].nil?
-          raise("No endpoint configured in #{configfile}")
+          warn("No endpoint configured in #{configfile}")
         end
       else
-        raise("Missing config file! #{configfile}")
+        warn("Missing config file! #{configfile}")
         defaults = {
           :endpoint => nil,
           :apikey   => nil,
         }
       end
-      @@c_endpoint = defaults['endpoint']
-      @@c_apikey = defaults['apikey']
       if defaults['endpoint'].nil?
         raise("Endpoint in config file is nil?! #{configfile}")
       end
+      @@c_endpoint = defaults['endpoint']
+      @@c_apikey = defaults['apikey']
 #    else
 #      defaults = {
 #        :endpoint => @@c_endpoint,
@@ -57,6 +57,7 @@ module Puppet::Util
     end
     if endpoint.nil?
       raise("Unable to identify the endpoint for 1Password API : #{Puppet.settings[:confdir]}/1password.yaml")
+      return nil
     end
     # set options
     OpConnect.api_endpoint = "https://" + endpoint + "/v1"
@@ -64,9 +65,9 @@ module Puppet::Util
 
     begin
       op = OpConnect::Client.new()
-    rescue
-      op = nil
-      raise("1Password: ERROR: Cannot open API at https://#{endpoint}/v1")
+    rescue => e
+      raise("1Password: ERROR: Cannot open API at https://#{endpoint}/v1 : #{e.message}")
+      return nil
     end
     op
   end
@@ -79,8 +80,8 @@ module Puppet::Util
       if File.exists?(configfile)
         begin
           defaults = Puppet::Util::Yaml.safe_load_file(configfile)
-        rescue
-          raise("Unable to load YAML file #{configfile}")
+        rescue => error
+          raise("Unable to load YAML file #{configfile} : #{error.message}")
           return nil
         end
       else

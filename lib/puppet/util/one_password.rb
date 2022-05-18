@@ -8,12 +8,7 @@ module Puppet::Util
   @@c_apikey = nil
   @@c_defaultvault = nil
 
-  def initialize()
-    @@c_endpoint = nil
-    @@c_apikey = nil
-    @@c_defaultvault = nil
-  end
-  def initialize(apikey,endpoint,defaultvault)
+  def initialize(apikey=nil,endpoint=nil,defaultvault=nil)
     @@c_endpoint = endpoint
     @@c_apikey = apikey
     @@c_defaultvault = defaultvault
@@ -21,7 +16,7 @@ module Puppet::Util
 
   # Define class method
   def self.op_connect(apikey=nil,endpoint=nil)
-    if @@c_endpoint.nil?
+#    if @@c_endpoint.nil?
       # Check local 1password.yaml file for defaults, if not set
       configdir = Puppet.settings[:confdir]
       defconfigfile = configdir + '/1password.yaml'
@@ -46,14 +41,14 @@ module Puppet::Util
       @@c_endpoint = defaults['endpoint']
       @@c_apikey = defaults['apikey']
       if defaults['endpoint'].nil?
-        raise("Endpoint is nil?! #{configfile}")
+        raise("Endpoint in config file is nil?! #{configfile}")
       end
-    else
-      defaults = {
-        :endpoint => @@c_endpoint,
-        :apikey => @@c_apikey
-      } 
-    end
+#    else
+#      defaults = {
+#        :endpoint => @@c_endpoint,
+#        :apikey => @@c_apikey
+#      } 
+#    end
     if endpoint.nil?
       endpoint = defaults['endpoint']
     end

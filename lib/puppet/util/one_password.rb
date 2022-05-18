@@ -1,5 +1,4 @@
 require 'op_connect'
-require 'pp'
 
 module Puppet::Util
   class OnePassword
@@ -21,17 +20,17 @@ module Puppet::Util
     defconfigfile = configdir + '/1password.yaml'
     configfile = defconfigfile
     if @@c_endpoint.nil?
-      Puppet.send_log(:warning,"OP: Reading configuration")
+      Puppet.send_log(:info,"OP: Reading configuration")
       # Check local 1password.yaml file for defaults, if not set
       #configdir = Puppet.settings[:confdir]
       #defconfigfile = configdir + '/1password.yaml'
       #configfile = defconfigfile
       if File.exists?(configfile)
         begin
-          Puppet.send_log(:warning,"OP: Reading configfile #{configfile}")
+          Puppet.send_log(:info,"OP: Reading configfile #{configfile}")
           defaults = Puppet::Util::Yaml.safe_load_file(configfile)
         rescue
-          raise("OP: Unable to parse YAML file: #{configfile}")
+          Puppet.send_log(:error,"OP: Unable to parse YAML file: #{configfile}")
           return nil
         end
         if defaults['endpoint'].nil?
@@ -45,6 +44,7 @@ module Puppet::Util
         }
       end
       if defaults['endpoint'].nil?
+        Puppet.send_log(:error,"OP: Empty endpoint in config #{configfile}")
         raise("OP: Endpoint in config file is nil?! #{configfile}")
       end
       @@c_endpoint = defaults['endpoint']
@@ -55,7 +55,6 @@ module Puppet::Util
         :apikey => @@c_apikey
       } 
     end
-    Puppet.send_log(:warning, "OP: "+ pp(defaults) )
     if endpoint.nil?
       endpoint = defaults['endpoint']
     end
@@ -63,7 +62,7 @@ module Puppet::Util
       apikey = defaults['apikey']
     end
     if endpoint.nil?
-      raise("OP: Unable to identify the endpoint for 1Password API : #{Puppet.settings[:confdir]}/1password.yaml configfile(#{configfile}) endpoint(#{endpoint}) apikey(#{apikey}) c_endpoint(#{@@c_endpoint}) defaults: " + pp(defaults))
+      raise("OP: Unable to identify the endpoint for 1Password API : #{Puppet.settings[:confdir]}/1password.yaml configfile(#{configfile}) endpoint(#{endpoint}) apikey(#{apikey}) c_endpoint(#{@@c_endpoint}) defaults: " + defaults.keys.join(','))
       return nil
     end
     Puppet.send_log(:warning,"OP: Creating new client to #{endpoint}")

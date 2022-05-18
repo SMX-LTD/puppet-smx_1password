@@ -16,22 +16,27 @@ module Puppet::Util
 
   # Define class method
   def self.op_connect(apikey=nil,endpoint=nil)
-#    if @@c_endpoint.nil?
+    if @@c_endpoint.nil?
+      puts "OP: Reading configuration"
       # Check local 1password.yaml file for defaults, if not set
       configdir = Puppet.settings[:confdir]
       defconfigfile = configdir + '/1password.yaml'
       configfile = defconfigfile
       if File.exists?(configfile)
         begin
+          puts "OP: Reading configfile #{configfile}"
           defaults = Puppet::Util::Yaml.safe_load_file(configfile)
+          pp defaults
         rescue
           raise("Unable to parse YAML file: #{configfile}")
           return nil
         end
         if defaults['endpoint'].nil?
+          puts "OP: No endpoint in #{configfile}"
           warn("No endpoint configured in #{configfile}")
         end
       else
+        puts "OP: Missing configfile #{configfile}"
         warn("Missing config file! #{configfile}")
         defaults = {
           :endpoint => nil,
@@ -43,12 +48,14 @@ module Puppet::Util
       end
       @@c_endpoint = defaults['endpoint']
       @@c_apikey = defaults['apikey']
-#    else
-#      defaults = {
-#        :endpoint => @@c_endpoint,
-#        :apikey => @@c_apikey
-#      } 
-#    end
+    else
+      puts "OP: Global already set"
+      defaults = {
+        :endpoint => @@c_endpoint,
+        :apikey => @@c_apikey
+      } 
+      pp defaults
+    end
     if endpoint.nil?
       endpoint = defaults['endpoint']
     end
@@ -59,6 +66,7 @@ module Puppet::Util
       raise("Unable to identify the endpoint for 1Password API : #{Puppet.settings[:confdir]}/1password.yaml")
       return nil
     end
+    puts "OP: Creating new client to #{endpoint}"
     # set options
     OpConnect.api_endpoint = "https://" + endpoint + "/v1"
     OpConnect.access_token = apikey

@@ -119,8 +119,8 @@ Puppet::Functions.create_function(:'op::set_secret') do
             {
               value: username,
               purpose: "USERNAME",
-              id: "username"
-              label: "username"
+              id: "username",
+              label: "username",
               type: "STRING"
             },
             {

@@ -34,7 +34,7 @@ module Puppet::Util
           Puppet.send_log(:err,"OP: Unable to parse YAML file: #{configfile}")
           return nil
         end
-        if defaults['endpoint'].nil?
+        if defaults[:endpoint].nil?
           Puppet.send_log(:warning,"OP: No endpoint configured in #{configfile}")
         end
       else
@@ -46,7 +46,6 @@ module Puppet::Util
       end
       if defaults[:endpoint].nil?
         Puppet.send_log(:err,"OP: Empty endpoint in config #{configfile}")
-        raise("OP: Endpoint in config file is nil?! #{configfile}")
       end
       @@c_endpoint = defaults[:endpoint] unless defaults[:endpoint].nil?
       @@c_apikey = defaults[:apikey] unless defaults[:apikey].nil?
@@ -56,10 +55,10 @@ module Puppet::Util
         :apikey => @@c_apikey
       } 
     end
-    if endpoint.nil? or endpoint == ''
+    if endpoint.nil? 
       endpoint = defaults[:endpoint]
     end
-    if apikey.nil? or apikey == ''
+    if apikey.nil? 
       apikey = defaults[:apikey]
     end
     if endpoint.nil?

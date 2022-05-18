@@ -16,15 +16,13 @@ module Puppet::Util
 
   # Define class method
   def self.op_connect(apikey=nil,endpoint=nil)
-    configdir = Puppet.settings[:confdir]
-    defconfigfile = configdir + '/1password.yaml'
-    configfile = defconfigfile
+    defaults = {}
     if @@c_endpoint.nil?
       Puppet.send_log(:info,"OP: Reading configuration")
       # Check local 1password.yaml file for defaults, if not set
-      #configdir = Puppet.settings[:confdir]
-      #defconfigfile = configdir + '/1password.yaml'
-      #configfile = defconfigfile
+      configdir = Puppet.settings[:confdir]
+      defconfigfile = configdir + '/1password.yaml'
+      configfile = defconfigfile
       if File.exists?(configfile)
         begin
           Puppet.send_log(:info,"OP: Reading configfile #{configfile}")
@@ -43,23 +41,23 @@ module Puppet::Util
           :apikey   => nil,
         }
       end
-      if defaults['endpoint'].nil?
+      if defaults[:endpoint].nil?
         Puppet.send_log(:error,"OP: Empty endpoint in config #{configfile}")
         raise("OP: Endpoint in config file is nil?! #{configfile}")
       end
-      @@c_endpoint = defaults['endpoint']
-      @@c_apikey = defaults['apikey']
+      @@c_endpoint = defaults[:endpoint] unless defaults[:endpoint].nil?
+      @@c_apikey = defaults[:apikey] unless defaults[:apikey].nil?
     else
       defaults = {
         :endpoint => @@c_endpoint,
         :apikey => @@c_apikey
       } 
     end
-    if endpoint.nil?
-      endpoint = defaults['endpoint']
+    if endpoint.nil? or endpoint == ''
+      endpoint = defaults[:endpoint]
     end
-    if apikey.nil?
-      apikey = defaults['apikey']
+    if apikey.nil? or apikey == ''
+      apikey = defaults[:apikey]
     end
     if endpoint.nil?
       raise("OP: Unable to identify the endpoint for 1Password API : #{Puppet.settings[:confdir]}/1password.yaml configfile(#{configfile}) endpoint(#{endpoint}) apikey(#{apikey}) c_endpoint(#{@@c_endpoint}) defaults: " + defaults.keys.join(','))
@@ -96,17 +94,17 @@ module Puppet::Util
           :default_vault => nil,
         }
       end
-      @@c_defaultvault = defaults['default_vault']
+      @@c_defaultvault = defaults[:default_vault]
     else
       defaults = {
         :default_vault => @@c_defaultvault
       }
     end
-    if defaults['default_vault'].nil?
+    if defaults[:default_vault].nil?
       @@c_defaultvault = 'Default Vault'
       return 'Default Vault'
     else
-      return defaults['default_vault']
+      return defaults[:default_vault]
     end
   end
   

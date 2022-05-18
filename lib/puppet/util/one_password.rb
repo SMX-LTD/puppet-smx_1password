@@ -1,5 +1,8 @@
 require 'op_connect'
 
+# Note: send_log levels :debug :info :notice :warning :err :alert :emerg :crit
+# Logs go to puppetserver:/var/log/puppet/puppetserver/puppetserver.log
+
 module Puppet::Util
   class OnePassword
 
@@ -28,7 +31,7 @@ module Puppet::Util
           Puppet.send_log(:info,"OP: Reading configfile #{configfile}")
           defaults = Puppet::Util::Yaml.safe_load_file(configfile)
         rescue
-          Puppet.send_log(:error,"OP: Unable to parse YAML file: #{configfile}")
+          Puppet.send_log(:err,"OP: Unable to parse YAML file: #{configfile}")
           return nil
         end
         if defaults['endpoint'].nil?
@@ -42,7 +45,7 @@ module Puppet::Util
         }
       end
       if defaults[:endpoint].nil?
-        Puppet.send_log(:error,"OP: Empty endpoint in config #{configfile}")
+        Puppet.send_log(:err,"OP: Empty endpoint in config #{configfile}")
         raise("OP: Endpoint in config file is nil?! #{configfile}")
       end
       @@c_endpoint = defaults[:endpoint] unless defaults[:endpoint].nil?

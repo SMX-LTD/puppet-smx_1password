@@ -37,6 +37,7 @@ module Puppet::Util
           raise("No endpoint configured in #{configfile}")
         end
       else
+        raise("Missing config file! #{configfile}")
         defaults = {
           :endpoint => nil,
           :apikey   => nil,
@@ -44,6 +45,9 @@ module Puppet::Util
       end
       @@c_endpoint = defaults['endpoint']
       @@c_apikey = defaults['apikey']
+      if defaults['endpoint'].nil?
+        raise("Endpoint is nil?! #{configfile}")
+      end
     else
       defaults = {
         :endpoint => @@c_endpoint,

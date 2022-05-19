@@ -40,8 +40,9 @@ define op::user(
     } else {
         $cvault = $vault
     }
+    $secretname = "${uname}\@${::fqdn}"
     $age_account = password_age($uname)
-    $opexists = op::check("${uname}@${fqdn}")
+    $opexists = op::check($secretname)
     notice ( "Password for ${uname} has age of ${age_account} : 1Password record = ${opexists}" )
     if ( $age_account < 0 ) {
       notify { "op-secret-$uname": withpath=>false,
@@ -55,15 +56,15 @@ define op::user(
             message=>"Not updating 1Password for $uname because in --noop mode" }
         } else {
           # change password for account
-          notice( "Updating password for $uname on $fqdn" )
+          notice( "Updating password for $secretname" )
           $newpass = generate_password($password_length)
-          $rv = op::set_secret("${uname}@${fqdn}",$newpass,$cvault)
+          $rv = op::set_secret($secretname,$newpass,$cvault)
           if ! $rv  {
             notify { "op-secret-$uname": withpath=>false,
-              message=>"ERROR: 1Password password update FAILED for ${uname}@${fqdn}: ${rv}" }
+              message=>"ERROR: 1Password password update FAILED for ${secretname}: ${rv}" }
           } else {
             notify { "op-secret-$uname": withpath=>false,
-              message=>"1Password password updated for $uname@$fqdn" }
+              message=>"1Password password updated for ${secretname}" }
             # change password on system
             exec { "passwd_$name":
               command=>$operatingsystem?{
@@ -71,7 +72,7 @@ define op::user(
                 # allow use of /usr/sbin/chpasswd
                 # Solaris needs chpasswd to be installed but then it
                 # works OK.  AIX, no idea...
-                /(RedHat|CentOS|Fedora)/=>"/usr/bin/chage -m '$minreset' '$uname';/bin/echo '$uname:$newpass'|/usr/sbin/chpasswd",
+                /(RedHat|CentOS|Fedora|Alma|Rocky)/=>"/usr/bin/chage -m '$minreset' '$uname';/bin/echo '$uname:$newpass'|/usr/sbin/chpasswd",
                 /(Ubuntu|Debian)/       =>"/usr/bin/chage -m '$minreset' '$uname';/bin/echo '$uname:$newpass'|/usr/sbin/chpasswd",
                 /(Solaris|SunOS)/       =>"/bin/echo '$uname:$newpass'|/usr/sbin/chpasswd",
                 default=>"/bin/false",

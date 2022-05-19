@@ -65,11 +65,11 @@ module Puppet::Util
       raise("OP: Unable to identify the endpoint for 1Password API : #{Puppet.settings[:confdir]}/1password.yaml configfile(#{configfile}) endpoint(#{endpoint}) c_endpoint(#{@@c_endpoint}) defaults: " + defaults.keys.join(','))
       return nil
     end
-    Puppet.send_log(:warning,"OP: Creating new client to #{endpoint}")
     # set options
     OpConnect.api_endpoint = "https://" + endpoint + "/v1"
     OpConnect.access_token = apikey
 
+    Puppet.send_log(:info,"OP: Creating new client to #{endpoint}")
     begin
       op = OpConnect::Client.new()
     rescue => e

@@ -57,7 +57,6 @@ Puppet::Functions.create_function(:'op::set_secret') do
             if (! i.state or (i.state != 'DELETED' and i.state != 'ARCHIVED' ))
               itemid = i.id
               vaultid = v.id
-              break
             end
           } #items
         end
@@ -138,22 +137,24 @@ Puppet::Functions.create_function(:'op::set_secret') do
 
         # Create the item
         attributes = {
-          vault: {
-            id: vaultid
-          },
           title: secretname,
-          category: "LOGIN",
-          templateUuid: "001", # LoginUuid=001 SecureNote=003 Document=006
           tags: [  
             "puppet"
           ],
+          vault: {
+            id: vaultid
+          },
+          category: "LOGIN",
+          templateUuid: "001", # LoginUuid=001 SecureNote=003 Document=006
+          sections: [
+          ],
           fields: [
             {
-              value: username,
-              purpose: "USERNAME",
               id: "username",
-              label: "username",
               type: "STRING"
+              purpose: "USERNAME",
+              label: "username",
+              value: username,
             },
             {
               id: "password",
@@ -171,7 +172,9 @@ Puppet::Functions.create_function(:'op::set_secret') do
             }
           ],
           files: [
-          ]
+          ],
+          createdAt: "",
+          updatedAt: "",
         }
 
         Puppet.send_log(:info, "OP: 1Password item being created for #{secretname}" )

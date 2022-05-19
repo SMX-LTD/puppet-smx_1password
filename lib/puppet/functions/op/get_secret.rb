@@ -57,8 +57,12 @@ Puppet::Functions.create_function(:'op::get_secret') do
             # retrieve complete item
             i = op.item(
               vault_id: v.id, 
-              id: i.id
+              id: thisid
             )
+            if i.nil?
+              Puppet.send_log(:warn,"OP: Item disappeared as we were reading it #{secretname}" )
+              return nil
+            end
             # identify the first PASSWORD purpose field
             i.fields.each { |f|
               if f.purpose == 'PASSWORD' 

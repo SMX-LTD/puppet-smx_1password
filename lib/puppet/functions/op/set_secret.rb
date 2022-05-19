@@ -136,7 +136,8 @@ Puppet::Functions.create_function(:'op::set_secret') do
           },
           title: secretname,
           category: "LOGIN",
-          tags: [
+          templateUuid: "001", # LoginUuid=001 SecureNote=003 Document=006
+          tags: [  
             "puppet"
           ],
           fields: [

@@ -30,39 +30,39 @@ module Puppet::Util
         begin
           Puppet.send_log(:info,"OP: Reading configfile #{configfile}")
           defaults = Puppet::Util::Yaml.safe_load_file(configfile)
-        rescue
-          Puppet.send_log(:err,"OP: Unable to parse YAML file: #{configfile}")
+        rescue => error
+          raise("OP: Unable to parse YAML file: #{configfile} - #{eror.message}")
           return nil
         end
-        if defaults[:endpoint].nil?
+        if defaults['endpoint'].nil?
           Puppet.send_log(:warning,"OP: No endpoint configured in #{configfile}")
         end
       else
         Puppet.send_log(:warning,"OP: Missing config file! #{configfile}")
         defaults = {
-          :endpoint => nil,
-          :apikey   => nil,
+          'endpoint' => nil,
+          'apikey'   => nil,
         }
       end
-      if defaults[:endpoint].nil?
+      if defaults['endpoint'].nil?
         Puppet.send_log(:err,"OP: Empty endpoint in config #{configfile}")
       end
-      @@c_endpoint = defaults[:endpoint] unless defaults[:endpoint].nil?
-      @@c_apikey = defaults[:apikey] unless defaults[:apikey].nil?
+      @@c_endpoint = defaults['endpoint'] unless defaults['endpoint'].nil?
+      @@c_apikey = defaults['apikey'] unless defaults['apikey'].nil?
     else
       defaults = {
-        :endpoint => @@c_endpoint,
-        :apikey => @@c_apikey
+        'endpoint' => @@c_endpoint,
+        'apikey' => @@c_apikey
       } 
     end
     if endpoint.nil? 
-      endpoint = defaults[:endpoint]
+      endpoint = defaults['endpoint']
     end
     if apikey.nil? 
-      apikey = defaults[:apikey]
+      apikey = defaults['apikey']
     end
     if endpoint.nil?
-      raise("OP: Unable to identify the endpoint for 1Password API : #{Puppet.settings[:confdir]}/1password.yaml configfile(#{configfile}) endpoint(#{endpoint}) apikey(#{apikey}) c_endpoint(#{@@c_endpoint}) defaults: " + defaults.keys.join(','))
+      raise("OP: Unable to identify the endpoint for 1Password API : #{Puppet.settings[:confdir]}/1password.yaml configfile(#{configfile}) endpoint(#{endpoint}) c_endpoint(#{@@c_endpoint}) defaults: " + defaults.keys.join(','))
       return nil
     end
     Puppet.send_log(:warning,"OP: Creating new client to #{endpoint}")
@@ -80,6 +80,7 @@ module Puppet::Util
   end
 
   def self.op_default_vault()
+    defaults = {}
     if @@c_defaultvault.nil?
       configdir = Puppet.settings[:confdir]
       defconfigfile = configdir + '/1password.yaml'
@@ -93,20 +94,21 @@ module Puppet::Util
         end
       else
         defaults = {
-          :default_vault => nil,
+          'default_vault' => nil,
         }
       end
-      @@c_defaultvault = defaults[:default_vault]
+      @@c_defaultvault = defaults['default_vault']
     else
       defaults = {
-        :default_vault => @@c_defaultvault
+        'default_vault' => @@c_defaultvault
       }
     end
-    if defaults[:default_vault].nil?
+    if defaults['default_vault'].nil?
+      Puppet.send_log(:warning,"OP: Default vaultname was not supplied, picking one myself")
       @@c_defaultvault = 'Default Vault'
       return 'Default Vault'
     else
-      return defaults[:default_vault]
+      return defaults['default_vault']
     end
   end
   

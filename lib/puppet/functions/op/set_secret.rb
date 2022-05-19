@@ -88,21 +88,26 @@ Puppet::Functions.create_function(:'op::set_secret') do
         } # fields
         if ! path.nil?
           Puppet.send_log(:err,"OP: Cannot locate a Password field in secret #{secretname}")
-          raise( "fail: Cannot locate password field in secret #{secretname}" )
+          # raise( "fail: Cannot locate password field in secret #{secretname}" )
           return false
         end
 
         attributes = [
           { op: 'replace', path: path, value: newpass }
         ]
-        item = op.update_item(
-          vault_id: vaultid, 
-          id: itemid, 
-          body: attributes
-        )
+        begin
+          item = op.update_item(
+            vault_id: vaultid, 
+            id: itemid, 
+            body: attributes
+          )
+        rescue => error
+          Puppet.send_log(:err,"OP: Failed to update #{secretname} - #{error.message}")
+          return false
+        end
         if item.nil?
           Puppet.send_log(:err,"OP: Failed to update #{secretname}")
-          raise( "fail: Cannot update secret #{secretname}" )
+          # raise( "fail: Cannot update secret #{secretname}" )
           return false
         else
           Puppet.send_log(:info,"OP: Updated secret successfully #{secretname}")
@@ -170,12 +175,17 @@ Puppet::Functions.create_function(:'op::set_secret') do
         }
 
         Puppet.send_log(:info, "OP: 1Password item being created for #{secretname}" )
-        item = op.create_item(vault_id: vaultid, body: attributes)
+        begin
+          item = op.create_item(vault_id: vaultid, body: attributes)
+        rescue => error
+          Puppet.send_log(:err, "OP: Failed to create item #{secretname} - #{error.message}" )
+          return false
+        end
         if item
           return true
         else
-          Puppet.send_log(:warning, "OP: 1Password item create ERROR" )
-          raise( "unknown: 1Password item create ERROR" )
+          Puppet.send_log(:err, "OP: Failed to create item #{secretname}" )
+          # raise( "unknown: 1Password item create ERROR" )
           return false
         end
       end

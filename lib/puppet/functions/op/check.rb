@@ -19,7 +19,7 @@ Puppet::Functions.create_function(:'op::check') do
       op = Puppet::Util::OnePassword.op_connect(apikey,endpoint)
 
       if op.nil? 
-        raise( "unknown: Unable to connect to 1Password" )
+        raise( "OP: Unable to connect to 1Password" )
         return false
       end
 
@@ -34,10 +34,11 @@ Puppet::Functions.create_function(:'op::check') do
       }
       return false
     rescue => error
-      raise( "unknown: 1Password lookup ERROR: #{error.message}" )
+      Puppet.send_log( :err, "OP: 1Password lookup error for #{secretname}: #{error.message}" )
+      raise( "OP: 1Password lookup error for #{secretname}: #{error.message}" )
       return false
     end
-    raise( "unknown: Unable to connect to 1Password - how did I get here?" )
+    raise( "OP: Unable to connect to 1Password - how did I get here?" )
     return false
   end # function
 end # create function

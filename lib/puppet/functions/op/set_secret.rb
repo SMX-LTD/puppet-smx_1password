@@ -28,7 +28,7 @@ Puppet::Functions.create_function(:'op::set_secret') do
       end
 
 	  if Puppet[:noop] or Puppet.settings['noop']
-	    warn( "1Password will NOT be updated as in --noop mode" )
+	    Puppet.send_log(:warning,"OP: 1Password will NOT be updated as in --noop mode" )
         return true
 	  end
 
@@ -62,7 +62,13 @@ Puppet::Functions.create_function(:'op::set_secret') do
         break if itemid
       } # vaults
 
-      if itemid
+      if ! itemid.nil?
+        Puppet.send_log(:info,"OP: Identified item to update - [#{vaultid}/#{itemid}] = #{secretname}")
+      else
+        Puppet.send_log(:info,"OP: Will need to create new item for #{secretname}")
+      end
+
+      if ! itemid.nil?
         # update the item
         # retrieve complete item
         item = op.item(
@@ -78,7 +84,8 @@ Puppet::Functions.create_function(:'op::set_secret') do
             break
           end
         } # fields
-        if ! path
+        if ! path.nil?
+          Puppet.send_log(:err,"OP: Cannot locate a Password field in secret #{secretname}")
           raise( "fail: Cannot locate password field in secret #{secretname}" )
           return false
         end
@@ -91,16 +98,25 @@ Puppet::Functions.create_function(:'op::set_secret') do
           id: itemid, 
           body: attributes
         )
+        if item.nil?
+          Puppet.send_log(:err,"OP: Failed to update #{secretname}")
+          raise( "fail: Cannot update secret #{secretname}" )
+          return false
+        else
+          Puppet.send_log(:info,"OP: Updated secret successfully #{secretname}")
+        fi
       else
         # we need to create a new secret
 
-        # Identify vault to use
+        # Identify vault to use. This returns an array.
         vault = Puppet::Util::OnePassword.op_default_vault() if ! vault
         v = op.vaults filter: "title eq '#{vault}'"
-        if ! v 
+        if v.nil? or (v.size < 1)
+          Puppet.send_log(:err,"OP: Cannot identify vault #{vault}")
           raise( "fail: Cannot identify 1Password vault '#{vault}'" )
           return false
         end
+        Puppet.send_log(:info,"OP: Identified vault [#{v[0].id}] = #{vault}")
          
         # Identify username, if we can
         username = secretname.sub( /@.*/, "" ).sub( /^.*:\/*/, "" )
@@ -108,7 +124,7 @@ Puppet::Functions.create_function(:'op::set_secret') do
         # Create the item
         attributes = {
           vault: {
-            id: v.id
+            id: v[0].id
           },
           title: secretname,
           category: "LOGIN",
@@ -142,12 +158,12 @@ Puppet::Functions.create_function(:'op::set_secret') do
           ]
         }
 
-        item = op.create_item(vault_id: v.id, body: attributes)
+        item = op.create_item(vault_id: v[0].id, body: attributes)
         if item
           return true
         else
-          Puppet.send_log(:warning, "unknown: 1Password item create ERROR: #{$!}" )
-          raise( "unknown: 1Password item create ERROR: #{$!}" )
+          Puppet.send_log(:warning, "OP: 1Password item create ERROR" )
+          raise( "unknown: 1Password item create ERROR" )
           return false
         end
       end
@@ -158,5 +174,5 @@ Puppet::Functions.create_function(:'op::set_secret') do
     end
     raise( "unknown: Unable to connect to 1Password - how did I get here?" )
     return false
-  end # function
+  end # def function
 end # create function

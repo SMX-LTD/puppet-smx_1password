@@ -104,7 +104,7 @@ Puppet::Functions.create_function(:'op::set_secret') do
           return false
         else
           Puppet.send_log(:info,"OP: Updated secret successfully #{secretname}")
-        fi
+        end
       else
         # we need to create a new secret
 

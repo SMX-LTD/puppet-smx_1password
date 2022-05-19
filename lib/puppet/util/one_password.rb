@@ -76,6 +76,7 @@ module Puppet::Util
       raise("OP: ERROR: Cannot open API at https://#{endpoint}/v1 : #{e.message}")
       return nil
     end
+    Puppet.send_log(:info,"OP: New client object created!")
     op
   end
 

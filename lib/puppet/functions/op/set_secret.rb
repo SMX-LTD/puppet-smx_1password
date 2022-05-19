@@ -23,7 +23,7 @@ Puppet::Functions.create_function(:'op::set_secret') do
       op = Puppet::Util::OnePassword.op_connect(apikey,endpoint)
 
       if op.nil? 
-        raise( "unknown: Unable to connect to 1Password" )
+        raise( "OP: Unable to connect to 1Password" )
         return false
       end
 

@@ -28,24 +28,24 @@ class op::test(
       message=>"1Password: default vault: ${test1}" 
     }
 
-    $test3 = op::check("${test_exists}@${fqdn}")
+    $test3 = op::check("${test_exists}@${::fqdn}")
     notify { "op-test-3": withpath=>false,
       message=>"1Password record for ${test_exists} exists? ${test3}" 
     }
 
-    $test5 = op::get_secret( $test_get )
+    $test5 = op::get_secret( "${test_get}@${::fqdn}" )
     notify { "op-test-5": withpath=>false,
-      message=>"Password for ${test_get} = ${test5}" 
+      message=>"Password for ${test_get}@${::fqdn} = ${test5}" 
     }
 
-    $test6 = op::get_secret( $test_get, false )
+    $test6 = op::get_secret( "${test_get}", false )
     notify { "op-test-6": withpath=>false,
       message=>"Password for ${test_get} (not exact match) = ${test6}" 
     }
 
-    $test7 = op::set_secret( $test_set, 'newpass' )
+    $test7 = op::set_secret( "${test_set}@${::fqdn}", 'newpass' )
     notify { "op-test-7": withpath=>false,
-      message=>"Set 1password record for ${test_set}: ${test7}" 
+      message=>"Set 1password record for ${test_set}@${::fqdn} : ${test7}" 
     }
 
   } else {

@@ -40,7 +40,7 @@ define op::user(
     } else {
         $cvault = $vault
     }
-    $secretname = "${uname}\@${::fqdn}"
+    $secretname = "${uname}@${::fqdn}"
     $age_account = password_age($uname)
     $opexists = op::check($secretname)
     notice ( "Password for ${uname} has age of ${age_account} : 1Password record = ${opexists}" )

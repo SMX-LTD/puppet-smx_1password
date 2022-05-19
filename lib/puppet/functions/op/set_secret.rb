@@ -19,6 +19,7 @@ Puppet::Functions.create_function(:'op::set_secret') do
 
   def set_secret(secretname,newpass,vault=nil,exact=true,apikey=nil,endpoint=nil)
     begin
+	  Puppet.send_log(:info,"OP: calling set_password for #{secretname}" )
       # Obtain a onepassword object
       op = Puppet::Util::OnePassword.op_connect(apikey,endpoint)
 
@@ -33,6 +34,7 @@ Puppet::Functions.create_function(:'op::set_secret') do
 	  end
 
       # Find the secret, if it exists
+	  Puppet.send_log(:info,"OP: searching for #{secretname}" )
       vaultid = nil
       itemid = nil
       vaults = op.vaults

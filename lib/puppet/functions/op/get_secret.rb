@@ -19,6 +19,8 @@ Puppet::Functions.create_function(:'op::get_secret') do
   end
   def get_secret(secretname,exact=true,apikey=nil,endpoint=nil)
     begin
+      Puppet.send_log(:info,"OP: calling get_password for #{secretname}" )
+
       # Obtail a onepassword object
       op = Puppet::Util::OnePassword.op_connect(apikey,endpoint)
 
@@ -27,6 +29,7 @@ Puppet::Functions.create_function(:'op::get_secret') do
         return nil
       end
 
+      Puppet.send_log(:info,"OP: searching for #{secretname}" )
       vaults = op.vaults
       vaults.each { |v|
         items = op.items(
@@ -44,12 +47,13 @@ Puppet::Functions.create_function(:'op::get_secret') do
         if items.size > 0 
           thisid = nil
           items.each { |i|
-            if (! i.state or (i.state != 'DELETED' and i.state != 'ARCHIVED' ))
+            if (i.state.nil? or (i.state != 'DELETED' and i.state != 'ARCHIVED' ))
               thisid = i.id
               break
             end
           } #items
-          if thisid 
+          if ! thisid.nil?
+            Puppet.send_log(:info,"OP: located item #{secretname}" )
             # retrieve complete item
             i = op.item(
               vault_id: v.id, 
@@ -61,6 +65,7 @@ Puppet::Functions.create_function(:'op::get_secret') do
                 return f.value
               end
             } # fields
+            Puppet.send_log(:warning,"OP: unable to find a PASSWORD field in #{secretname}" )
           end
         end
       } # vaults
@@ -69,6 +74,7 @@ Puppet::Functions.create_function(:'op::get_secret') do
       return nil
     end
     # not found in 1Password database
+    Puppet.send_log(:warning,"OP: unable to find #{secretname}" )
     return nil
   end # function
 end # create function

@@ -146,12 +146,10 @@ Puppet::Functions.create_function(:'op::set_secret') do
           },
           category: "LOGIN",
           templateUuid: "001", # LoginUuid=001 SecureNote=003 Document=006
-          sections: [
-          ],
           fields: [
             {
               id: "username",
-              type: "STRING"
+              type: "STRING",
               purpose: "USERNAME",
               label: "username",
               value: username,
@@ -170,11 +168,7 @@ Puppet::Functions.create_function(:'op::set_secret') do
               label: "notesPlain",
               value: "Created by puppet module"
             }
-          ],
-          files: [
-          ],
-          createdAt: "",
-          updatedAt: "",
+          ]
         }
 
         Puppet.send_log(:info, "OP: 1Password item being created for #{secretname}" )
@@ -184,12 +178,12 @@ Puppet::Functions.create_function(:'op::set_secret') do
           Puppet.send_log(:err, "OP: Failed to create item #{secretname} - #{error.message}" )
           return false
         end
-        if item
-          return true
-        else
+        if item.nil?
           Puppet.send_log(:err, "OP: Failed to create item #{secretname}" )
           # raise( "unknown: 1Password item create ERROR" )
           return false
+        else
+          return true
         end
       end
 

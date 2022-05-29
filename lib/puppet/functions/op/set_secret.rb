@@ -145,27 +145,26 @@ Puppet::Functions.create_function(:'op::set_secret') do
             id: vaultid
           },
           category: "LOGIN",
-          templateUuid: "001", # LoginUuid=001 SecureNote=003 Document=006
           fields: [
             {
-              id: "username",
-              type: "STRING",
+              # id: "username",
+              # type: "STRING",
               purpose: "USERNAME",
-              label: "username",
+              # label: "username",
               value: username,
             },
             {
-              id: "password",
-              type: "CONCEALED",
+              # id: "password",
+              # type: "CONCEALED",
               purpose: "PASSWORD",
-              label: "password",
+              # label: "password",
               value: newpass,
             },
             {
-              id: "notesPlain",
-              type: "STRING",
+              # id: "notesPlain",
+              # type: "STRING",
               purpose: "NOTES",
-              label: "notesPlain",
+              # label: "notesPlain",
               value: "Created by puppet module"
             }
           ]

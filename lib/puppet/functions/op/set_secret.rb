@@ -77,19 +77,19 @@ Puppet::Functions.create_function(:'op::set_secret') do
             break
           end
         } # fields
-        if ! path.nil?
+        if path.nil?
           Puppet.send_log(:err,"OP: Cannot locate a Password field in secret #{secretname}")
           return "Cannot locate password field in secret #{secretname}"
         end
 
-        attributes = [
-          { op: 'replace', path: path, value: newpass }
-        ]
         begin
+          # NOTE - this breaks v0.1.3 of the SDK due to a bug.
+          # The update_item function need to not set the content-type header
+          # and must pass the body attributes as an array
           item = op.update_item(
             vault_id: vaultid, 
             id: itemid, 
-            body: attributes
+            op: 'replace', path: path, value: newpass
           )
         rescue => error
           Puppet.send_log(:err,"OP: Failed to update #{secretname} - #{error.message}")

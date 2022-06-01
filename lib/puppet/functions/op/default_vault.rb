@@ -14,8 +14,8 @@ Puppet::Functions.create_function(:'op::default_vault') do
       v = Puppet::Util::OnePassword.op_default_vault()
 
       if v.nil?
-        raise( "Warning - no default 1Password vault name is configured" )
-        return ""
+        Puppet.send_log(:warning,"OP: no default 1Password vault name is configured" )
+        return "Default"
       end
   
       return v

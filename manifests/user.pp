@@ -14,18 +14,19 @@
 #    op::user { oracle: maxage=>60, vault=>'Oracle Passwords' }
 #
 # Assumptions:
-#    2. The specified vault exists, is writeable, and defaults to appropriate
+#    1. The specified vault exists, is writeable, and defaults to appropriate
 #       sharing rules
-#    4. All newly created passwords will be type Login
-#    5. Passwords can be changed via "echo 'pass'|passwd --stdin username"
-#       This is true under RedHat but not necessarily elsewhere.
-#    6. Password ages are in /etc/shadow in standard format
+#    2. All newly created passwords will be type Login
+#    3. Password ages are in /etc/shadow in standard format
+#    4. The configuration file for 1password.yaml exists on the puppetmaster
+#       and is correctly configured
 
 # This adds a new username to check for expiry
 define op::user(
   Integer $maxage = 30,
   Optional[String] $username = undef,  # defaults to the namevar
   Optional[String] $vault = undef,
+  Optional[String] $secret = undef, # defaults to username@fqdn
   Optional[Integer] $minreset = 0,
   Optional[Integer] $password_length = 12
 ) {
@@ -40,7 +41,11 @@ define op::user(
     } else {
         $cvault = $vault
     }
-    $secretname = "${uname}@${::fqdn}"
+    if ! $secret {
+        $secretname = "${uname}@${::fqdn}"
+    } else {
+        $secretname = $secret
+    }
     $age_account = password_age($uname)
     $opexists = op::check($secretname)
     notice ( "Password for ${uname} has age of ${age_account} : 1Password record = ${opexists}" )
@@ -49,6 +54,8 @@ define op::user(
          message=>"Username ${uname} does not exist on this host!" 
       }
     } else {
+      # update the password if it is too old, or if we dont have anything
+      # stored in the 1password server yet
       if $age_account > $maxage or ! $op_exists {
         # update 1Password
         if $::noop {
@@ -59,7 +66,7 @@ define op::user(
           notice( "Updating password for $secretname" )
           $newpass = generate_password($password_length)
           $rv = op::set_secret($secretname,$newpass,$cvault)
-          if ! $rv  {
+          if $rv  {
             notify { "op-secret-$uname": withpath=>false,
               message=>"ERROR: 1Password password update FAILED for ${secretname}: ${rv}" }
           } else {

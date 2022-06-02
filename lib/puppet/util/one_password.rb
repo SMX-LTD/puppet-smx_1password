@@ -21,7 +21,7 @@ module Puppet::Util
   def self.op_connect(apikey=nil,endpoint=nil)
     defaults = {}
     if @@c_endpoint.nil?
-      Puppet.send_log(:info,"OP: Reading configuration")
+      # Puppet.send_log(:info,"OP: Reading configuration")
       # Check local 1password.yaml file for defaults, if not set
       configdir = Puppet.settings[:confdir]
       defconfigfile = configdir + '/1password.yaml'
@@ -69,14 +69,14 @@ module Puppet::Util
     OpConnect.api_endpoint = "https://" + endpoint + "/v1"
     OpConnect.access_token = apikey
 
-    Puppet.send_log(:info,"OP: Creating new client to #{endpoint}")
+    # Puppet.send_log(:info,"OP: Creating new client to #{endpoint}")
     begin
       op = OpConnect::Client.new()
     rescue => e
       raise("OP: ERROR: Cannot open API at https://#{endpoint}/v1 : #{e.message}")
       return nil
     end
-    Puppet.send_log(:info,"OP: New client object created!")
+    # Puppet.send_log(:info,"OP: New client object created!")
     op
   end
 
@@ -106,8 +106,8 @@ module Puppet::Util
     end
     if defaults['default_vault'].nil?
       Puppet.send_log(:warning,"OP: Default vaultname was not supplied, picking one myself")
-      @@c_defaultvault = 'Default Vault'
-      return 'Default Vault'
+      @@c_defaultvault = 'Default'
+      return 'Default'
     else
       return defaults['default_vault']
     end

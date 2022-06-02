@@ -55,7 +55,7 @@ class op::test(
       message=>"Get 1password attachment for Document type : '${test8}'" 
     }
 
-    $test9 = op::get_file( "op:testdocument2" )
+    $test9 = op::get_file( "op:testdocument2", true )
     notify { "op-test-9": withpath=>false,
       message=>"Get 1password attachment for Note type : '${test9}'" 
     }

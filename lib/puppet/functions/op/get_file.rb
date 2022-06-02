@@ -9,20 +9,20 @@ require 'op_connect'
 Puppet::Functions.create_function(:'op::get_file') do
   dispatch :get_file do
     param 'String', :secretname
+    param 'String', :regex
     optional_param 'Boolean', :exact
     optional_param 'String', :apikey
     optional_param 'String', :endpoint
   end
   dispatch :get_file do
     param 'String', :secretname
-    param 'String', :regex
     optional_param 'Boolean', :exact
     optional_param 'String', :apikey
     optional_param 'String', :endpoint
   end
-  def get_file(secretname,exact=true,regex=nil,apikey=nil,endpoint=nil)
+  def get_file(secretname,regex=nil,exact=true,apikey=nil,endpoint=nil)
     begin
-      # Obtail a onepassword object
+      # Obtain a onepassword object
       op = Puppet::Util::OnePassword.op_connect(apikey,endpoint)
 
       if op.nil? 
@@ -63,20 +63,24 @@ Puppet::Functions.create_function(:'op::get_file') do
               return nil
             end
 
-            # Retrieve the attached file here XXX
+            # Retrieve the attached file here
             fileid = nil
             filename = nil
             files = op.files( vault_id: v.id, item_id: thisid )
             files.each { |f|
+              Puppet.send_log(:debug,"OP: Checking file #{f.name} =~ /#{regex}/" )
+              
               if regex.nil?
                 fileid = f.id
                 filename = f.name
                 break
               end
-              if f.name.match?(regex)
+              if f.name.match?(/#{regex}/)
                 fileid = f.id
                 filename = f.name
                 break
+              else
+                Puppet.send_log(:debug,"OP: Filename #{f.name} does not match regexp /#{regexp}/" )
               end
             }
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo Update git
+echo Update git with changes and push to repo
 git add .
 git commit -m "Update $(date)"
 git push

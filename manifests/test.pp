@@ -4,6 +4,7 @@ class op::test(
   Boolean $active = false,
   String $test_exists = 'root',
   String $test_get = 'op3',
+  String $test_fuzzy = 'op3a',
   String $test_set = 'op4',
 ) {
   include op
@@ -38,14 +39,30 @@ class op::test(
       message=>"Password for ${test_get}@${::fqdn} = ${test5}" 
     }
 
-    $test6 = op::get_secret( "${test_get}", false )
+    $test6 = op::get_secret( "${test_fuzzy}", false )
     notify { "op-test-6": withpath=>false,
-      message=>"Password for ${test_get} (not exact match) = ${test6}" 
+      message=>"Password for ${test_fuzzy} (not exact match) = ${test6}" 
     }
 
-    $test7 = op::set_secret( "${test_set}@${::fqdn}", 'newpass' )
+    $testpass = generate_password(12)
+    $test7 = op::set_secret( "${test_set}@${::fqdn}", $testpass )
     notify { "op-test-7": withpath=>false,
-      message=>"Set 1password record for ${test_set}@${::fqdn} : ${test7}" 
+      message=>"Set 1password record for ${test_set}@${::fqdn} to '${testpass}' : '${test7}'" 
+    }
+
+    $test8 = op::get_file( "op:testdocument1" )
+    notify { "op-test-8": withpath=>false,
+      message=>"Get 1password attachment for Document type : '${test8}'" 
+    }
+
+    $test9 = op::get_file( "op:testdocument2" )
+    notify { "op-test-9": withpath=>false,
+      message=>"Get 1password attachment for Note type : '${test9}'" 
+    }
+
+    $test10 = op::get_file( "op:testdocument3", "testdata", true )
+    notify { "op-test-10": withpath=>false,
+      message=>"Get 1password attachment with regex selector : '${test10}'" 
     }
 
   } else {

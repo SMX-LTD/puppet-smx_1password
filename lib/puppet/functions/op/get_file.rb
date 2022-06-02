@@ -14,7 +14,7 @@ Puppet::Functions.create_function(:'op::get_file') do
     optional_param 'String', :apikey
     optional_param 'String', :endpoint
   end
-  dispatch :get_file do
+  dispatch :get_file_short do
     param 'String', :secretname
     optional_param 'Boolean', :exact
     optional_param 'String', :apikey
@@ -106,5 +106,8 @@ Puppet::Functions.create_function(:'op::get_file') do
     Puppet.send_log(:warning,"OP: unable to find file secret '#{secretname}' matching /#{regex}/" )
     return nil
   end # function
+  def get_file_short(secretname,exact=true,apikey=nil,endpoint=nil)
+    get_file(secretname,nil,exact,apikey,endpoint)
+  end
 end # create function
 

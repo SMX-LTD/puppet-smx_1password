@@ -10,8 +10,20 @@
 # To use:
 #    Make sure necessary settings are in the server 1password.yml, or
 #    defined in Heira
+# Puppet code example
 #    op::user { root: }
 #    op::user { oracle: maxage=>60, vault=>'Oracle Passwords' }
+# Hiera example
+#    op::user_passwords:
+#      op1: {}
+#      op2:
+#        maxage: 7
+#      foobar:
+#        username: op3
+#        password_length: 20
+#        minreset: 14
+#      user:
+#        secret: "Password for user on hostname"
 #
 # Assumptions:
 #    1. The specified vault exists, is writeable, and defaults to appropriate

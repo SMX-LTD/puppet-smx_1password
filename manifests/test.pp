@@ -1,4 +1,6 @@
 # Run some tests
+# This class should only be used to test the functionality of the module
+# and its configuration on the servers.  Otherwise don't use it!
 
 class op::test(
   Boolean $active = false,

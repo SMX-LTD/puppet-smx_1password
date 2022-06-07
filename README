@@ -4,6 +4,8 @@ SMX
 Requires op_connect Ruby Gem to be installed on Puppet Master: 
 'gem install op_connect'
 
+Use gem 0.1.3 with the fix or later
+
 # PARAMETERS
 
 Set these in Heira or in the 1password.yml on the server(s)
@@ -38,53 +40,71 @@ Attributes:
            default is 30
    vault: which vault to place the secret into, if not the default
    username: (namevar) username to set password for
-   minchange: minimum number of days before password can be changed by user
+   minreset: minimum number of days before password can be changed by user
            default is 0 (may not be supported by your unix)
+   password_length: length of password to create
+   secret: text for secret name (default is $username@$fqdn)
 
 1Password:
-   The new password secure is of type 
+   The new password is of type LOGIN
    The secret name is $username@$fqdn
 
 Assumptions:
-   2. The specified vault exists, is writeable, and defaults to appropriate
+   1. The specified vault exists, is writeable, and defaults to appropriate
       sharing rules
-   3. All passwords for servers are shared with the puppet user
-   4. All newly created passwords will be with standard type
-   5. Passwords can be changed via /usr/sbin/chpasswd (install this if it is
+   2. All passwords for servers are shared with the puppet user
+   3. All newly created passwords will be with standard type
+   4. Passwords can be changed via /usr/sbin/chpasswd (install this if it is
       not present).  This works for ubuntu, debian, redhat, centos, fedora,
       and solaris (if chpasswd is installed from sunfreeware)
-   6. Password ages are in /etc/shadow in standard format (OK for redhat, 
+   5. Password ages are in /etc/shadow in standard format (OK for redhat, 
       centos, fedora, ubuntu, debian, solaris)
-   7. OnePassword API available
+   6. OnePassword API available
 
-# SSL CERTIFICATE CLASS
-This will synchronise certificate/key files on the client with the certificate
-and key data held in the cloud.
+# Retrieval function
 
-It will optionally restart Apache after making changes.
+    $vaultname = op::default_vault()
+    Return name of default vault
+    Return undef for error
 
-Allows you to have certificates stored centrally, and multiple servers using 
-the same certificate automatically updated together by puppet.
+    $daysold = password_age($username)
+    Return how many whole days old the password for the user is (0+)
+    Return undef for user does not exist
 
-Should also work with Windows if you have service=>false and specify a
-windows file location with key=> and crt=>, though this is not tested.
+    $exists = op::check($secretname)
+    Return true or false depending on if the secret exists
 
-To use:
-op::cert { 'www.auckland.ac.nz': }
-op::cert { $fqdn: cert=>"/foo/bar/${fqdn}.pem"; }
+    $password = generate_password($length=12)
+    Generate a random password.  Use 12 if length not specified.
 
-Attributes:
-  key, crt: Specify alternate locations for the files.  Default is to put them
-    into /etc/httpd/conf/$name.crt and /etc/httpd/conf/$name.key
-  op: set to false if you want it to pull from a file instead of 1password
+    $secret = op::get_secret( $secretname )
+    $secret = op::get_secret( $secretname, $exact=true )
+    Retrieve secret value.  $exact is optional, if false then does partial match
+    Return undef if secret not found
 
-1Password:
-  The certificates MUST be stored in an object with a Certificate template.
-  The secret name MUST correspond exactly to the namevar.
+    $status = op::set_secret( $secretname, $value )
+    $status = op::set_secret( $secretname, $value, $exact=true, $vault=$default )
+    Set secret to given value.  If secret doesnt exist, then create it in the
+    default vault (or specified vault).  Search for secret to update using partial
+    match if exact=false.
+    Return undef IF SUCCESSFUL else return error string
 
-Assumptions:
-  1. The puppet master must have read access to the certificate secret
-  2. The files are stored in the correct format.  No conversion or validation
-     is performed.
-  3. 1Password API 7.6 or later available
+    $content = op::get_file( $secretname )
+    $content = op::get_file( $secretname, $exact=true )
+    $content = op::get_file( $secretname, $filename=".", $exact=true )
+    Retrieve content of file attached to secret.  If $exact=false then use
+    partial match.  Use the first attached file unless $filename is given
+    in which case use this as a regexp to match against the filename.
+    Return undef if not found
 
+# Errors
+
+Fatal errors will be raised in puppet and cause a halt.
+set_secret will return error strings on failure.
+Errors are logged in puppetserver logs
+
+# Configuring
+
+* Install op_connect ruby gem into the puppetserver ruby ( puppetserver gem install op_connect )
+* Config in /etc/puppetlabs/puppet/1password.yaml
+* Must set default_vault, endpoint, apikey

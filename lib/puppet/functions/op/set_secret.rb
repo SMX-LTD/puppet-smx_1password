@@ -17,7 +17,7 @@ Puppet::Functions.create_function(:'op::set_secret') do
     optional_param 'String', :endpoint
   end
 
-  def set_secret(secretname,newpass,vault=nil,exact=true,apikey=nil,endpoint=nil)
+  def set_secret(secretname,newpass,exact=true,vault=nil,apikey=nil,endpoint=nil)
     begin
       # Obtain a onepassword object
       op = Puppet::Util::OnePassword.op_connect(apikey,endpoint)
@@ -37,6 +37,9 @@ Puppet::Functions.create_function(:'op::set_secret') do
       itemid = nil
       vaults = op.vaults
       vaults.each { |v|
+        if ! vault.nil?
+          next if v.name != vault
+        end
         items = op.items(
           vault_id: v.id, 
           filter: ('title eq "'+secretname+'"')
@@ -53,6 +56,11 @@ Puppet::Functions.create_function(:'op::set_secret') do
           thisid = nil
           items.each { |i|
             if (! i.state or (i.state != 'DELETED' and i.state != 'ARCHIVED' ))
+              if ! itemid.nil?
+                # found more than one match
+                Puppet.send_log(:warning,"OP: Found more than one match for #{secretname}")
+                return "Found multiple matches for secret #{secretname}, will not update"
+              end
               itemid = i.id
               vaultid = v.id
             end

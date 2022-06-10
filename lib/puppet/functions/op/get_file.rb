@@ -11,16 +11,18 @@ Puppet::Functions.create_function(:'op::get_file') do
     param 'String', :secretname
     param 'String', :regex
     optional_param 'Boolean', :exact
+    optional_param 'String', :vault
     optional_param 'String', :apikey
     optional_param 'String', :endpoint
   end
   dispatch :get_file_short do
     param 'String', :secretname
     optional_param 'Boolean', :exact
+    optional_param 'String', :vault
     optional_param 'String', :apikey
     optional_param 'String', :endpoint
   end
-  def get_file(secretname,regex=nil,exact=true,apikey=nil,endpoint=nil)
+  def get_file(secretname,regex=nil,exact=true,vault=nil,apikey=nil,endpoint=nil)
     begin
       # Obtain a onepassword object
       op = Puppet::Util::OnePassword.op_connect(apikey,endpoint)
@@ -30,8 +32,13 @@ Puppet::Functions.create_function(:'op::get_file') do
         return nil
       end
 
+      content = nil
+      thisid = nil
       vaults = op.vaults
       vaults.each { |v|
+        if ! vault.nil?
+          next if v.name != vault
+        end
         items = op.items(
           vault_id: v.id, 
           filter: ('title eq "'+secretname+'"')
@@ -45,11 +52,13 @@ Puppet::Functions.create_function(:'op::get_file') do
         end
         # items is now an array of item objects
         if items.size > 0 
-          thisid = nil
           items.each { |i|
             if (i.state.nil? or (i.state != 'DELETED' and i.state != 'ARCHIVED' ))
+              if ! thisid.nil?
+                Puppet.send_log(:warning,"OP: Multiple items match #{secretname}" )
+                return nil
+              end
               thisid = i.id
-              break
             end
           } #items
           if ! thisid.nil?
@@ -59,7 +68,7 @@ Puppet::Functions.create_function(:'op::get_file') do
               id: thisid
             )
             if i.nil?
-              Puppet.send_log(:warn,"OP: Item disappeared as we were reading it #{secretname}" )
+              Puppet.send_log(:warning,"OP: Item disappeared as we were reading it #{secretname}" )
               return nil
             end
 
@@ -69,22 +78,32 @@ Puppet::Functions.create_function(:'op::get_file') do
             files = op.files( vault_id: v.id, item_id: thisid )
             files.each { |f|
               Puppet.send_log(:debug,"OP: Checking file #{f.name} =~ /#{regex}/" )
-              
               if regex.nil?
+                if ! fileid.nil?
+                  Puppet.send_log(:warning,"OP: Multiple file attachments on #{i.name}, use regexp match" )
+                  return nil
+                end
                 fileid = f.id
                 filename = f.name
-                break
-              end
-              if f.name.match?(/#{regex}/)
-                fileid = f.id
-                filename = f.name
-                break
               else
-                Puppet.send_log(:debug,"OP: Filename #{f.name} does not match regexp /#{regexp}/" )
+                if f.name.match?(/#{regex}/)
+                  if ! fileid.nil?
+                    Puppet.send_log(:warning,"OP: Multiple file attachments on #{i.name} match regexp /#{regexp}/" )
+                    return nil
+                  end
+                  fileid = f.id
+                  filename = f.name
+                else
+                  Puppet.send_log(:debug,"OP: Filename #{f.name} does not match regexp /#{regexp}/" )
+                end
               end
             }
 
             if ! fileid.nil?
+              if ! content.nil?
+                Puppet.send_log(:warning,"OP: Multiple possible file items match #{secretname}" )
+                return nil
+              end
               Puppet.send_log(:info,"OP: Retrieve file #{filename} from secret #{secretname}")
               content = op.file_content(vault_id: v.id, item_id: thisid, 
                 id: fileid
@@ -92,7 +111,6 @@ Puppet::Functions.create_function(:'op::get_file') do
               if content.nil?
                 Puppet.send_log(:error,"OP: Retrieve file #{filename} from secret #{secretname} failed")
               end
-              return content
             end
 
           end
@@ -106,8 +124,8 @@ Puppet::Functions.create_function(:'op::get_file') do
     Puppet.send_log(:warning,"OP: unable to find file secret '#{secretname}' matching /#{regex}/" )
     return nil
   end # function
-  def get_file_short(secretname,exact=true,apikey=nil,endpoint=nil)
-    get_file(secretname,nil,exact,apikey,endpoint)
+  def get_file_short(secretname,exact=true,vault=nil,apikey=nil,endpoint=nil)
+    get_file(secretname,nil,exact,vault,apikey,endpoint)
   end
 end # create function
 

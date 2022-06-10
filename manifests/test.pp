@@ -41,15 +41,34 @@ class op::test(
       message=>"Password for ${test_get}@${::fqdn} = ${test5}" 
     }
 
+    $test5a = op::get_secret( "doesnotexist", true, "bad vault name" )
+    notify { "op-test-5a": withpath=>false,
+      message=>"Password for nonexistent returns = "${test5a}" (should be nil)" 
+    }
+
     $test6 = op::get_secret( "${test_fuzzy}", false )
     notify { "op-test-6": withpath=>false,
       message=>"Password for ${test_fuzzy} (not exact match) = ${test6}" 
     }
 
+    $test6a = op::get_secret( "o", false )
+    notify { "op-test-6a": withpath=>false,
+      message=>"Password search that matches multiple returns "${test6a}" (should be nil)" 
+    }
+
     $testpass = generate_password(12)
     $test7 = op::set_secret( "${test_set}@${::fqdn}", $testpass )
     notify { "op-test-7": withpath=>false,
-      message=>"Set 1password record for ${test_set}@${::fqdn} to '${testpass}' : '${test7}'" 
+      message=>"Set 1password record for ${test_set}@${::fqdn} to '${testpass}' : '${test7}' (should be nil)" 
+    }
+
+    $test7a = op::set_secret( "doesnotexist", $testpass, true, "bad vault name" )
+    notify { "op-test-7a": withpath=>false,
+      message=>"Set 1password record for nonexistent vault : '${test7a}' (should be error)" 
+    }
+    $test7b = op::set_secret( "o", $testpass, false )
+    notify { "op-test-7b": withpath=>false,
+      message=>"Set 1password record for multiple matches : '${test7b}' (should be error)" 
     }
 
     $test8 = op::get_file( "op:testdocument1" )
@@ -65,6 +84,11 @@ class op::test(
     $test10 = op::get_file( "op:testdocument3", "testdata", true )
     notify { "op-test-10": withpath=>false,
       message=>"Get 1password attachment with regex selector : '${test10}'" 
+    }
+
+    $test11 = op::get_file( "op:testdocument", false )
+    notify { "op-test-11": withpath=>false,
+      message=>"Get 1password attachment with multiple matches: '${test11}' (should be nil)" 
     }
 
   } else {

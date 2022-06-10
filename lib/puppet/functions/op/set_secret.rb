@@ -113,7 +113,7 @@ Puppet::Functions.create_function(:'op::set_secret') do
       else
         # we need to create a new secret
 
-        # Identify vault to use. This returns an array.
+        # Identify vault to use. op.vaults returns an array.
         vault = Puppet::Util::OnePassword.op_default_vault() if vault.nil?
         vaultid = nil
         op.vaults.each { |v|

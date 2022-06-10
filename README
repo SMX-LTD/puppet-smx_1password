@@ -72,26 +72,28 @@ Assumptions:
     Return undef for user does not exist
 
     $exists = op::check($secretname)
-    Return true or false depending on if the secret exists
+    Return true or false depending on if the secret exists ( exact match )
 
     $password = generate_password($length=12)
     Generate a random password.  Use 12 if length not specified.
 
     $secret = op::get_secret( $secretname )
-    $secret = op::get_secret( $secretname, $exact=true )
+    $secret = op::get_secret( $secretname, $exact=true, $vault=$default )
     Retrieve secret value.  $exact is optional, if false then does partial match
-    Return undef if secret not found
+    If a vault is not specified, then all available vaults are scanned
+    Return undef if secret not found, or if multiple matches are found
 
     $status = op::set_secret( $secretname, $value )
     $status = op::set_secret( $secretname, $value, $exact=true, $vault=$default )
     Set secret to given value.  If secret doesnt exist, then create it in the
-    default vault (or specified vault).  Search for secret to update using partial
-    match if exact=false.
+    default vault (or specified vault).  Search for secret to update using 
+    partial match if exact=false.
     Return undef IF SUCCESSFUL else return error string
+    Multiple matches is handled as an error
 
     $content = op::get_file( $secretname )
-    $content = op::get_file( $secretname, $exact=true )
-    $content = op::get_file( $secretname, $filename=".", $exact=true )
+    $content = op::get_file( $secretname, $exact=true, $vault=$default )
+    $content = op::get_file( $secretname, $filename=".", $exact=true, $vault=$default )
     Retrieve content of file attached to secret.  If $exact=false then use
     partial match.  Use the first attached file unless $filename is given
     in which case use this as a regexp to match against the filename.
@@ -99,6 +101,8 @@ Assumptions:
 
 # Errors
 
+If trying to retrieve or update a secret, and more than one potential match are
+found, then this will be handled as an error (not found, or update failed)
 Fatal errors will be raised in puppet and cause a halt.
 set_secret will return error strings on failure.
 Errors are logged in puppetserver logs

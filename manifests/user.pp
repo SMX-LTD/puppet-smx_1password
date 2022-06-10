@@ -37,8 +37,8 @@
 define op::user(
   Integer $maxage = 30,
   Optional[String] $username = undef,  # defaults to the namevar
-  Optional[String] $vault = undef,
   Optional[String] $secret = undef, # defaults to username@fqdn
+  Optional[String] $vault = undef,
   Optional[Integer] $minreset = 0,
   Optional[Integer] $password_length = 12
 ) {
@@ -47,11 +47,6 @@ define op::user(
         $uname = $name
     } else {
         $uname = $username
-    }
-    if ! $vault {
-        $cvault = op::default_vault()
-    } else {
-        $cvault = $vault
     }
     if ! $secret {
         $secretname = "${uname}@${::fqdn}"
@@ -77,7 +72,7 @@ define op::user(
           # change password for account
           notice( "Updating password for $secretname" )
           $newpass = generate_password($password_length)
-          $rv = op::set_secret($secretname,$newpass,$cvault)
+          $rv = op::set_secret($secretname,$newpass,true,$vault)
           if $rv  {
             notify { "op-secret-$uname": withpath=>false,
               message=>"ERROR: 1Password password update FAILED for ${secretname}: ${rv}" }

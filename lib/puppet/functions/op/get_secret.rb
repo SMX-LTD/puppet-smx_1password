@@ -77,7 +77,7 @@ Puppet::Functions.create_function(:'op::get_secret') do
             } # fields
             if secretvalue.nil?
               Puppet.send_log(:warning,"OP: unable to find a PASSWORD field in #{secretname}" )
-            fi
+            end
           end
         end
       } # vaults

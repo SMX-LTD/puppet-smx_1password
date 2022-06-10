@@ -43,7 +43,7 @@ class op::test(
 
     $test5a = op::get_secret( "doesnotexist", true, "bad vault name" )
     notify { "op-test-5a": withpath=>false,
-      message=>"Password for nonexistent returns = "${test5a}" (should be nil)" 
+      message=>"Password for nonexistent returns = '${test5a}' (should be nil)" 
     }
 
     $test6 = op::get_secret( "${test_fuzzy}", false )
@@ -53,7 +53,7 @@ class op::test(
 
     $test6a = op::get_secret( "o", false )
     notify { "op-test-6a": withpath=>false,
-      message=>"Password search that matches multiple returns "${test6a}" (should be nil)" 
+      message=>"Password search that matches multiple returns '${test6a}' (should be nil)" 
     }
 
     $testpass = generate_password(12)

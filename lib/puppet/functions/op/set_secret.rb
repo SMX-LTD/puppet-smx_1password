@@ -123,7 +123,7 @@ Puppet::Functions.create_function(:'op::set_secret') do
         }
         if vaultid.nil?
           Puppet.send_log(:err,"OP: Cannot identify vault '#{vault}'")
-          raise( "fail: Cannot access 1Password vault '#{vault}'" )
+          # raise( "fail: Cannot access 1Password vault '#{vault}'" )
           return "Cannot access 1Password vault '#{vault}'"
         end
          

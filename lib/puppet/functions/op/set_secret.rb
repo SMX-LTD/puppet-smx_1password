@@ -12,7 +12,7 @@ Puppet::Functions.create_function(:'op::set_secret') do
     param 'String', :secretname
     param 'String', :newpass
     optional_param 'Boolean', :exact
-    optional_param 'String', :vault
+    optional_param 'Variant[String,Undef]', :vault
     optional_param 'String', :apikey
     optional_param 'String', :endpoint
   end

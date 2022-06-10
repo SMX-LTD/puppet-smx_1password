@@ -15,7 +15,7 @@ Puppet::Functions.create_function(:'op::get_secret') do
   dispatch :get_secret do
     param 'String', :secretname
     optional_param 'Boolean', :exact
-    optional_param 'String', :vault
+    optional_param 'Variant[String,Undef]', :vault
     optional_param 'String', :apikey
     optional_param 'String', :endpoint
   end

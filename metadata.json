@@ -1,9 +1,16 @@
 {
   "name": "smx-1password",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "author": "Steve Shipway",
   "summary": "Integration with 1Password to manage passwords and certificates",
   "license": "GPLv2 or later",
   "source": "https://gitlab.com/SMX-LTD/puppet-smx_1password.git",
+  "dependencies": [ ],
+  "requirements": [
+    {
+      "name": "puppet",
+      "version_requirement": ">= 6.0.0"
+    }
+  ]
 }
 

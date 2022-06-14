@@ -1,5 +1,5 @@
 # This will fetch the attached file for a Document type secret
-# For a non-Document-type, you need to add a filename regexp to match
+# For a non-Document-type, you need to add a filename regex to match
 
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', '..', '..'))
@@ -80,7 +80,7 @@ Puppet::Functions.create_function(:'op::get_file') do
               Puppet.send_log(:debug,"OP: Checking file #{f.name} =~ /#{regex}/" )
               if regex.nil?
                 if ! fileid.nil?
-                  Puppet.send_log(:warning,"OP: Multiple file attachments on #{i.name}, use regexp match" )
+                  Puppet.send_log(:warning,"OP: Multiple file attachments on #{i.name}, use regex match" )
                   return nil
                 end
                 fileid = f.id
@@ -88,13 +88,13 @@ Puppet::Functions.create_function(:'op::get_file') do
               else
                 if f.name.match?(/#{regex}/)
                   if ! fileid.nil?
-                    Puppet.send_log(:warning,"OP: Multiple file attachments on #{i.name} match regexp /#{regexp}/" )
+                    Puppet.send_log(:warning,"OP: Multiple file attachments on #{i.name} match regex /#{regex}/" )
                     return nil
                   end
                   fileid = f.id
                   filename = f.name
                 else
-                  Puppet.send_log(:debug,"OP: Filename #{f.name} does not match regexp /#{regexp}/" )
+                  Puppet.send_log(:debug,"OP: Filename #{f.name} does not match regex /#{regex}/" )
                 end
               end
             }
@@ -116,6 +116,11 @@ Puppet::Functions.create_function(:'op::get_file') do
           end
         end
       } # vaults
+      # we return here, so that all vaults will have been scanned for a match
+      # and we will have alerted if any duplicates
+      if ! content.nil?
+        return content
+      end
     rescue => error
       Puppet.send_log(:err, "OP: 1Password file lookup failed for #{secretname}: #{error.message}" )
       return nil

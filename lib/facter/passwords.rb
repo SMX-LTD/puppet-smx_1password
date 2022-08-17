@@ -19,8 +19,8 @@ File.open("/etc/shadow").each do |line|
         pwlchg = $2 
     
         if pwlchg != nil
-            if pwlchg < 99999
-                pwage = currentday - pwlchg
+            if pwlchg.to_i < 99999
+                pwage = currentday - pwlchg.to_i
             else
                 pwage = 99999
             end

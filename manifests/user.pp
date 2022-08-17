@@ -55,32 +55,33 @@ define op::user(
     }
     $age_account = password_age($uname)
     $opexists = op::check($secretname)
-    notice ( "Password for ${uname} has age of ${age_account} : 1Password record = ${opexists}" )
+    notice ( "1Password : Password for ${uname} has age of ${age_account} : 1Password record = ${opexists}" )
     if ( $age_account < 0 ) {
       notify { "op-secret-$uname": withpath=>false,
-         message=>"Username ${uname} does not exist on this host!" 
+         message=>"1Password : Username ${uname} does not exist on this host!" 
       }
     } else {
       # update the password if it is too old, or if we dont have anything
       # stored in the 1password server yet
       if $age_account > $maxage or ! $opexists {
         notify { "op-secret-${uname}-toupdate": withpath=>false,
-          message=>"Need 1Password update for ${secretname} because ${age_account} > ${maxage} or ${opexists} == false" }
+          message=>"1Password : Need update for ${secretname} because either ${age_account} > ${maxage} or exists = ${opexists}" 
+        }
         # update 1Password
         if $::noop {
           notify { "op-secret-$uname": withpath=>false,
-            message=>"Not updating 1Password for $uname because in --noop mode" }
+            message=>"1Password : Not updating for $uname because in --noop mode"
+          }
         } else {
           # change password for account
-          notice( "Updating password for $secretname" )
+          notice( "1Password : Updating password for $secretname" )
           $newpass = generate_password($password_length)
           $rv = op::set_secret($secretname,$newpass,true,$vault)
           if $rv  {
             notify { "op-secret-$uname": withpath=>false,
-              message=>"ERROR: 1Password password update FAILED for ${secretname}: ${rv}" }
+              message=>"ERROR: 1Password password update FAILED for ${secretname}: ${rv}" 
+            }
           } else {
-            notify { "op-secret-$uname": withpath=>false,
-              message=>"1Password password updated for ${secretname}" }
             # change password on system
             exec { "passwd_$name":
               command=>$operatingsystem?{
@@ -94,6 +95,9 @@ define op::user(
                 default=>"/bin/false",
               },
               onlyif=>"/bin/egrep '^$uname:' /etc/passwd",
+            }
+            -> notify { "op-secret-$uname": withpath=>false,
+              message=>"1Password : Password updated for ${secretname}" 
             }
           }
         }

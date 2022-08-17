@@ -64,6 +64,8 @@ define op::user(
       # update the password if it is too old, or if we dont have anything
       # stored in the 1password server yet
       if $age_account > $maxage or ! $opexists {
+        notify { "op-secret-${uname}-toupdate": withpath=>false,
+          message=>"Need 1Password update for ${secretname} because ${age_account} > ${maxage} or ${opexists} == false" }
         # update 1Password
         if $::noop {
           notify { "op-secret-$uname": withpath=>false,

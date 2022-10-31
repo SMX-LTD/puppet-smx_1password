@@ -49,7 +49,7 @@ Puppet::Functions.create_function(:'op::hiera') do
     return context.not_found if secret_name == 'lookup_options'
 
     # Verify keybase is set and skip others
-    key_base = options['key_base']
+    key_base = options['keybase']
     if key_base
       # Skip keys outside the base
       begin

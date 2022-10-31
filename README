@@ -128,3 +128,7 @@ Errors are logged in puppetserver logs
 * Install op_connect ruby gem into the puppetserver ruby ( puppetserver gem install op_connect )
 * Config in /etc/puppetlabs/puppet/1password.yaml
 * Must set default_vault, endpoint, apikey
+
+The lookuptest.sh script tests against the local user's puppet install, copying
+the module in and configuring dynamically.  DO NOT RUN THIS AS ROOT.
+

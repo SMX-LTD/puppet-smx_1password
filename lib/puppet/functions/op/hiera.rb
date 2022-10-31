@@ -41,7 +41,7 @@ Puppet::Functions.create_function(:'op::hiera') do
       Optional[cache]    => Boolean,
     }]', :options
     param 'Puppet::LookupContext', :context
-    return_type 'Variant[String, Undef]'
+    return_type 'Variant[String,Undef]'
   end
 
   def lookup_key(secret_name, options, context)
@@ -57,7 +57,7 @@ Puppet::Functions.create_function(:'op::hiera') do
       rescue StandardError => e
         raise ArgumentError, "creating regexp failed with: #{e}"
       end
-      unless secret_name[regex_key_match] == secret_name
+      unless regex_key_match.match(secret_name)
         context.explain { "Skipping op backend because secret_name '#{secret_name}' is not in namespace '#{key_base}'" }
         context.not_found
       end
@@ -93,7 +93,7 @@ Puppet::Functions.create_function(:'op::hiera') do
 
     # Handle cached secrets, if we have enabled caching
     if options['cache']
-      return Puppet::Pops::Types::PStringType.new(context.cached_value(secret_name)) if context.cache_has_key(secret_name)
+      return context.cached_value(secret_name) if context.cache_has_key(secret_name)
     end
 
     # Search
@@ -163,10 +163,10 @@ Puppet::Functions.create_function(:'op::hiera') do
     if secretvalue.nil?
       context.explain { "OP: Unable to find secret #{secret_title}" }
       context.not_found
-      return
     end
 
     # Return the secret, and cache it for next time
-    Puppet::Pops::Types::PStringType.new(context.cache(secret_name, secretvalue))
+    context.explain { "OP: Found #{secret_title}" }
+    return context.cache(secret_name, secretvalue)
   end
 end

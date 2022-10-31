@@ -1,6 +1,6 @@
 {
   "name": "smx-1password",
-  "version": "1.2.0",
+  "version": "2.1.0",
   "author": "Steve Shipway",
   "summary": "Integration with 1Password to manage passwords and certificates",
   "license": "GPLv2 or later",

@@ -14,18 +14,19 @@ File.open("/etc/passwd").each do |line|
 end
 
 File.open("/etc/shadow").each do |line|
-    if line =~ /^([^:\s]+):[^:]+:(\d+):/ && uids[$1] && uids[$1] < maxuid
+    if line =~ /^([^:\s]+):[^:]+:(\d*):/ && uids[$1] && uids[$1] < maxuid
         username = $1
         pwlchg = $2 
     
-        if pwlchg != nil
+        pwage = -1
+        if pwlchg != nil && pwlchg != ""
             if pwlchg.to_i < 99999
                 pwage = currentday - pwlchg.to_i
             else
                 pwage = 99999
             end
-            pwage = 99999 if pwage < 0
         end
+        pwage = 99999 if pwage < 0
         
         if username != nil && pwage != nil
             test['pwage_'+username] = pwage

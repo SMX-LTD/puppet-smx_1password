@@ -65,7 +65,7 @@ define op::user(
       if $age_account > $maxage or ! $opexists {
         notice ( "1Password : Password for ${uname} on ${::fqdn} has age of ${age_account} : 1Password record = ${opexists}" )
         notify { "op-secret-${uname}-toupdate": withpath=>false,
-          message=>"1Password : Need update for ${secretname} because either ${age_account} > ${maxage} or exists = ${opexists}" 
+          message=>"1Password : Need update for ${secretname} because either ${age_account} > ${maxage} or ${opexists} == false" 
         }
         # update 1Password
         if $::noop {

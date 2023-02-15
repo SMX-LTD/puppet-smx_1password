@@ -137,6 +137,14 @@ fi
 [ -w `dirname $HIERAFILE` ] && makehieraconfig
 makefacts
 
+echo Verifying server certificate
+echo | env timeout --kill-after=5 4 openssl s_client -connect onepassword.az1.smxk8s.net:443  2>/dev/null | openssl x509 -noout -dates | sed -e 's/^/* /'
+echo | env timeout --kill-after=5 4 openssl s_client -verify 5 -verify_return_error -tls1_2 -connect onepassword.az1.smxk8s.net:443 >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo "Certificate verify failed - check your CA"
+  exit 1
+fi
+
 for TESTKEY in \
  'puppet::version' \
  'onepassword::sjs@test1' \
@@ -147,8 +155,8 @@ for TESTKEY in \
 do
 
 echo Retrieving $TESTKEY for $TESTHOST
-export SSL_NO_VERIFY=1
-$PUPPET lookup  --environment $ENVIRONMENT \
+export SSL_NO_VERIFY=True
+$PUPPET lookup --environment $ENVIRONMENT \
   --node $TESTHOST --facts $FACTS  $TESTKEY
 rv=$?
 if [ $rv -ne 0 ]; then

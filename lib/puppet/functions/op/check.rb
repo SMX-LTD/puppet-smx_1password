@@ -25,13 +25,18 @@ Puppet::Functions.create_function(:'op::check') do
 
       vaults = op.vaults
       vaults.each { |v|
+        Puppet.send_log(:info,"OP: Checking for #{secretname} in #{v.name}")
         items = op.items(vault_id: v.id, filter: (
           'title eq "'+secretname+'"'
         ))
-        if items.size > 0
-          return true
-        end
-      }
+        items.each { |i|
+          if (i.state.nil? or (i.state != 'DELETED' and i.state != 'ARCHIVED' ))
+            # Puppet.send_log(:info,"OP: FOUND #{secretname} in #{v.name}")
+            return true
+          end
+        } # items.each
+      } # vaults.each
+      Puppet.send_log(:info,"OP: NOT FOUND #{secretname}")
       return false
     rescue => error
       Puppet.send_log( :err, "OP: 1Password lookup error for #{secretname}: #{error.message}" )

@@ -34,6 +34,7 @@ Puppet::Functions.create_function(:'op::set_secret') do
 
       # Find the secret, if it exists
       vaultid = nil
+      vaultname = nil
       itemid = nil
       vaults = op.vaults
       vaults.each { |v|
@@ -53,7 +54,6 @@ Puppet::Functions.create_function(:'op::set_secret') do
         end
         # items is now an array of item objects
         if items.size > 0 
-          thisid = nil
           items.each { |i|
             if (! i.state or (i.state != 'DELETED' and i.state != 'ARCHIVED' ))
               if ! itemid.nil?
@@ -63,11 +63,14 @@ Puppet::Functions.create_function(:'op::set_secret') do
               end
               itemid = i.id
               vaultid = v.id
+              vaultname = v.name
             end
-          } #items
+          } # items.each
         end
-        break if itemid
-      } # vaults
+        # Can't break because it stops us from spotting duplicate names in
+        # other vaults.  So need to keep looking for duplicates.
+        # break if ! itemid.nil?
+      } # vaults.each
 
       if ! itemid.nil?
         # update the item
@@ -100,14 +103,14 @@ Puppet::Functions.create_function(:'op::set_secret') do
             op: 'replace', path: path, value: newpass
           )
         rescue => error
-          Puppet.send_log(:err,"OP: Failed to update #{secretname} - #{error.message}")
-          return "Failed to update #{secretname} - #{error.message}"
+          Puppet.send_log(:err,"OP: Failed to update #{secretname} in #{vaultname}: #{error.message}")
+          return "Failed to update #{secretname} in #{vaultname}: #{error.message}"
         end
         if item.nil?
-          Puppet.send_log(:err,"OP: Failed to update #{secretname}")
-          return "Cannot update secret #{secretname}"
+          Puppet.send_log(:err,"OP: Failed to update #{secretname} in #{vaultname}")
+          return "Cannot update secret #{secretname} in #{vaultname}"
         else
-          Puppet.send_log(:info,"OP: Updated secret successfully #{secretname}")
+          Puppet.send_log(:info,"OP: Updated secret successfully #{secretname} in #{vaultname}")
           return nil
         end
       else
@@ -155,7 +158,7 @@ Puppet::Functions.create_function(:'op::set_secret') do
           )
         rescue => error
           Puppet.send_log(:err, "OP: Failed to create item #{secretname} - #{error.message}" )
-          return "Failed to create item #{secretname} - #{error.message}"
+          return "Failed to create item #{secretname} in {vault} - #{error.message}"
         end
         if item.nil?
           Puppet.send_log(:err, "OP: Failed to create item #{secretname}" )

@@ -138,8 +138,14 @@ fi
 makefacts
 
 echo Verifying server certificate
-echo | env timeout --kill-after=5 4 openssl s_client -connect onepassword.az1.smxk8s.net:443  2>/dev/null | openssl x509 -noout -dates | sed -e 's/^/* /'
-echo | env timeout --kill-after=5 4 openssl s_client -verify 5 -verify_return_error -tls1_2 -connect onepassword.az1.smxk8s.net:443 >/dev/null 2>&1
+echo | env timeout --kill-after=5 4 openssl s_client \
+  -connect onepassword.az1.smxk8s.net:443 \
+  -servername onepassword.az1.smxk8s.net 2>/dev/null \
+  | openssl x509 -noout -dates | sed -e 's/^/* /'
+echo | env timeout --kill-after=5 4 openssl s_client -verify 5 \
+  -verify_return_error -tls1_2 \
+  -connect onepassword.az1.smxk8s.net:443 \
+  -servername onepassword.az1.smxk8s.net >/dev/null 2>&1
 if [ $? -ne 0 ]; then
   echo "Certificate verify failed - check your CA"
   exit 1

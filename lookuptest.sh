@@ -10,19 +10,21 @@
 # %{lookup('onepassword::*::sjs@test1')}
 # %{lookup('onepassword::Playpen::fuzzy match::false')}
 
-HIERADATA=/home/steves/puppet/hiera
-TESTHOST=xmdwfd01
+HIERADATA=$HOME/puppet/hiera
 TESTROLE=hosting_wfd
 TESTSITE=xmd
+TESTHOST=${TESTSITE}wfd01
 TESTKEY="onepassword::sjs@test1"
-# BASE=/etc/puppetlabs
-BASE=/home/steves/.puppetlabs
+BASE=$HOME/.puppetlabs
+if [ ! -d $BASE ]; then
+  BASE=/etc/puppetlabs
+fi
 ENVDIR=$BASE/etc/code/environments
 ENVIRONMENT=test
 HIERAFILE=$ENVDIR/$ENVIRONMENT/hiera.yaml
 MODDIR=$ENVDIR/$ENVIRONMENT/modules
-PKCSPUB=/home/steves/config/puppet-public.pem
-PKCSPVT=/home/steves/config/puppet-private.pem
+PKCSPUB=$HOME/config/puppet-public.pem
+PKCSPVT=$HOME/config/puppet-private.pem
 LIBCACHEDIR=/opt/puppetlabs/puppet/cache
 OPCONFIG=$BASE/etc/puppet/1password.yaml
 
@@ -101,6 +103,9 @@ _END_
 makeopconfig()
 {
   echo Making onepassword config
+  if [ -f opconfig ]; then
+    cat opconfig > $OPCONFIG
+  else
   cat >$OPCONFIG <<_END_
 # Test key for Playpen only
 # Replace with real key if you want to test against production vaults
@@ -109,6 +114,7 @@ apikey: eyJhbGciOiJFUzI1NiIsImtpZCI6IjJ4Y3FvdmF6cTNyZmltbzZnbWRzZnB5MnFtIiwidHlw
 endpoint: onepassword.az1.smxk8s.net
 default_vault: Playpen
 _END_
+  fi
 }
 
 if [ "$1" != "" ]; then
@@ -151,19 +157,22 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+# This one only works if you have a production key (test key is 
+# playpen only).  Note quoting to allow '.' in the name.
+# '"onepassword::Hosting and Filtering::ldap:dovecot@xmd.smxemail.com"' \
 for TESTKEY in \
  'puppet::version' \
- 'onepassword::sjs@test1' \
  'onepassword::Playpen::sjs@test1' \
+ 'onepassword::sjs@test1' \
  'onepassword::*::sjs@test1' \
  'onepassword::Playpen::fuzzy match::false' \
- 'testkeya' 'testkeyb'
+ 'testkeya' 'testkeyb' 
 do
 
 echo Retrieving $TESTKEY for $TESTHOST
 export SSL_NO_VERIFY=True
-$PUPPET lookup --environment $ENVIRONMENT \
-  --node $TESTHOST --facts $FACTS  $TESTKEY
+$PUPPET lookup --environment "$ENVIRONMENT" \
+  --node "$TESTHOST" --facts "$FACTS"  "$TESTKEY"
 rv=$?
 if [ $rv -ne 0 ]; then
   echo "EXIT STATUS: $rv"

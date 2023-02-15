@@ -45,6 +45,7 @@ Puppet::Functions.create_function(:'op::hiera') do
   end
 
   def lookup_key(secret_name, options, context)
+    msg = ''
     # This is a reserved key name in hiera
     return context.not_found if secret_name == 'lookup_options'
 
@@ -58,17 +59,20 @@ Puppet::Functions.create_function(:'op::hiera') do
         raise ArgumentError, "creating regexp failed with: #{e}"
       end
       unless regex_key_match.match(secret_name)
-        context.explain { "Skipping op backend because secret_name '#{secret_name}' is not in namespace '#{key_base}'" }
+        context.explain { "OP: Skipping op backend because secret_name '#{secret_name}' is not in namespace '#{key_base}'" }
         context.not_found
       end
     else
-      raise ArgumentError, 'Need to specify keybase in the hiera options for op'
+      raise ArgumentError, 'OP: Need to specify keybase in the hiera options for op'
     end
 
     # Determine secret_key, splitting by ::
     keyarr = secret_name.split(/::/, -1)
     if keyarr.length < 2 
-      raise ArgumentError, "Secret name #{secret_name} must match #{key_base}::[vaultname::]secretname[::exact]"
+      context.explain { "OP: Secret name #{secret_name} must match #{key_base}::[vaultname::]secretname[::exact]" }
+      return "BAD-FORMAT-IDENTIFIER"
+
+      raise ArgumentError, "OP: Secret name #{secret_name} must match #{key_base}::[vaultname::]secretname[::exact]"
     end
     if keyarr.length < 3
       vault = options['vault']
@@ -86,7 +90,9 @@ Puppet::Functions.create_function(:'op::hiera') do
         elsif keyarr[3] == 'true'
           exact = true
         else
-          raise ArgumentError, "Secret name #{secret_name} final option can only be true or false"
+          context.explain { "OP: Secret name #{secret_name} final option can only be true or false" }
+          return "BAD-FORMAT-IDENTIFIER"
+          raise ArgumentError, "OP: Secret name #{secret_name} final option can only be true or false"
         end
       end
     end
@@ -115,15 +121,17 @@ Puppet::Functions.create_function(:'op::hiera') do
       if !vault.nil? and vault != ''
         next if v.name != vault
       end
+      # msg = msg + ":vault #{v.name}:title eq \"#{secret_title}\""
       items = op.items(
         vault_id: v.id,
-        filter: ('title eq "' + secret_title + '"')
+        filter: "title eq \"#{secret_title}\""
       )
       # maybe we should check all vaults for exact before we allow fuzzy
       if items.empty? && exact
+        # msg = msg + ":title co \"#{secret_title}\""
         items = op.items(
           vault_id: v.id,
-          filter: ('title co "' + secret_title + '"')
+          filter: "title co \"#{secret_title}\""
         )
       end
       # items is now an array of item objects
@@ -131,42 +139,53 @@ Puppet::Functions.create_function(:'op::hiera') do
         items.each { |i|
           if i.state.nil? || (i.state != 'DELETED' && i.state != 'ARCHIVED')
             unless thisid.nil?
+              context.explain { "OP: Multiple entries in 1password vault #{v.name} match #{secret_title}" }
+              return "MULTIPLE-MATCHES-FOUND"
               raise Puppet::Error, "OP: Multiple entries in 1password vault #{v.name} match #{secret_title}"
             end
             thisid = i.id
+          # else
+          #   msg = msg + ":Skipping item #{i.state}"
           end
         } #items
         unless thisid.nil?
+          # msg = msg + ":retrieving #{thisid}"
           # retrieve complete item
           i = op.item(
             vault_id: v.id, 
             id: thisid
           )
           if i.nil?
+            context.explain { "OP: Item disappeared as we were reading it #{secret_title}" }
+            context.not_found
             raise Puppet::Error, "OP: Item disappeared as we were reading it #{secret_title}" 
           end
           # identify the first PASSWORD purpose field
           i.fields.each { |f|
             if f.purpose == 'PASSWORD'
+              # msg = msg + ":found password"
               secretvalue = f.value
               break
             end
           } # fields
           if secretvalue.nil?
             thisid = nil
+            # msg = msg + ":No password"
           end
         end
+      # else
+      #   msg = msg + ":No items"
       end
     } # vaults
 
     # not found
     if secretvalue.nil?
-      context.explain { "OP: Unable to find secret #{secret_title}" }
+      context.explain { "OP: Unable to find secret #{secret_title} in vault #{vault}#{msg}" }
       context.not_found
     end
 
     # Return the secret, and cache it for next time
-    context.explain { "OP: Found #{secret_title}" }
+    context.explain { "OP: Found #{secret_title} #{msg}" }
     return context.cache(secret_name, secretvalue)
   end
 end

@@ -10,11 +10,13 @@
 # %{lookup('onepassword::*::sjs@test1')}
 # %{lookup('onepassword::Playpen::fuzzy match::false')}
 
+DEBUG=--debug
+DEBUG=
 HIERADATA=$HOME/puppet/hiera
-TESTROLE=hosting_wfd
-TESTSITE=xmd
-TESTHOST=${TESTSITE}wfd01
-TESTKEY="onepassword::sjs@test1"
+TESTROLE=core_inf
+TESTSITE=xmt
+TESTHOST=${TESTSITE}inf01
+TESTKEY=""
 BASE=$HOME/.puppetlabs
 if [ ! -d $BASE ]; then
   BASE=/etc/puppetlabs
@@ -157,21 +159,28 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# This one only works if you have a production key (test key is 
-# playpen only).  Note quoting to allow '.' in the name.
-# '"onepassword::Hosting and Filtering::ldap:dovecot@xmd.smxemail.com"' \
-for TESTKEY in \
+if [ "$TESTKEY" == "" ]; then
+  KEYLIST="
  'puppet::version' \
  'onepassword::Playpen::sjs@test1' \
  'onepassword::sjs@test1' \
  'onepassword::*::sjs@test1' \
  'onepassword::Playpen::fuzzy match::false' \
  'testkeya' 'testkeyb' 
+ "
+else
+  KEYLIST="'$TESTKEY'"
+fi
+
+# This one only works if you have a production key (test key is 
+# playpen only).  Note quoting to allow '.' in the name.
+# '"onepassword::Hosting and Filtering::ldap:dovecot@xmd.smxemail.com"' \
+for TESTKEY in $KEYLIST
 do
 
 echo Retrieving $TESTKEY for $TESTHOST
 export SSL_NO_VERIFY=True
-$PUPPET lookup --environment "$ENVIRONMENT" \
+$PUPPET lookup $DEBUG --environment "$ENVIRONMENT" \
   --node "$TESTHOST" --facts "$FACTS"  "$TESTKEY"
 rv=$?
 if [ $rv -ne 0 ]; then

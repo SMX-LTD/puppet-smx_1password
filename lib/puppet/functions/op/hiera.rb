@@ -41,7 +41,7 @@ Puppet::Functions.create_function(:'op::hiera') do
       Optional[cache]    => Boolean,
     }]', :options
     param 'Puppet::LookupContext', :context
-    return_type 'Variant[String,Undef]'
+    return_type 'Variant[String,Sensitive[String],Undef]'
   end
 
   def lookup_key(secret_name, options, context)
@@ -111,7 +111,7 @@ Puppet::Functions.create_function(:'op::hiera') do
     # Obtain a onepassword object
     op = Puppet::Util::OnePassword.op_connect(options['apikey'],options['endpoint'])
     if op.nil? 
-      raise ArgumentError, 'OP: Unable to connect to 1Password'
+      raise Puppet::DataBinding::LookupError, 'OP: Unable to connect to 1Password'
     end
     # scan all relevant vaults
     thisid = nil
@@ -141,7 +141,7 @@ Puppet::Functions.create_function(:'op::hiera') do
             unless thisid.nil?
               context.explain { "OP: Multiple entries in 1password vault #{v.name} match #{secret_title}" }
               return "MULTIPLE-MATCHES-FOUND"
-              raise Puppet::Error, "OP: Multiple entries in 1password vault #{v.name} match #{secret_title}"
+              raise Puppet::DataBinding::LookupError, "OP: Multiple entries in 1password vault #{v.name} match #{secret_title}"
             end
             thisid = i.id
           # else
@@ -158,7 +158,7 @@ Puppet::Functions.create_function(:'op::hiera') do
           if i.nil?
             context.explain { "OP: Item disappeared as we were reading it #{secret_title}" }
             context.not_found
-            raise Puppet::Error, "OP: Item disappeared as we were reading it #{secret_title}" 
+            raise Puppet::DataBinding::LookupError, "OP: Item disappeared as we were reading it #{secret_title}" 
           end
           # identify the first PASSWORD purpose field
           i.fields.each { |f|
@@ -186,6 +186,8 @@ Puppet::Functions.create_function(:'op::hiera') do
 
     # Return the secret, and cache it for next time
     context.explain { "OP: Found #{secret_title} #{msg}" }
-    return context.cache(secret_name, secretvalue)
+    data = context.cache(secret_name, secretvalue)
+    sensitive_data = Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
+    return sensitive_data
   end
 end

@@ -10,8 +10,18 @@
 # %{lookup('onepassword::*::sjs@test1')}
 # %{lookup('onepassword::Playpen::fuzzy match::false')}
 
+# For huge amounts of detail
 DEBUG=--debug
+# To explain the heirachy and how the value was found
+DEBUG=--explain
+# To just give the result
 DEBUG=
+
+# Give separate value in some cases
+FORMAT=yaml
+# Render as string
+FORMAT=s
+
 HIERADATA=$HOME/puppet/hiera
 TESTROLE=core_inf
 TESTSITE=xmt
@@ -100,6 +110,7 @@ _END_
 cat >/tmp/test.yaml <<_END_
 testkeya: testvalue
 testkeyb: "%{lookup('onepassword::sjs@test1')}"
+testkeyc: "%{alias('onepassword::sjs@test1')}"
 _END_
 }
 makeopconfig()
@@ -161,12 +172,12 @@ fi
 
 if [ "$TESTKEY" == "" ]; then
   KEYLIST="
- 'puppet::version' \
- 'onepassword::Playpen::sjs@test1' \
- 'onepassword::sjs@test1' \
- 'onepassword::*::sjs@test1' \
- 'onepassword::Playpen::fuzzy match::false' \
- 'testkeya' 'testkeyb' 
+ puppet::version \
+ onepassword::Playpen::sjs@test1 \
+ onepassword::sjs@test1 \
+ onepassword::*::sjs@test1 \
+ onepassword::Playpen::fuzzy_match::false \
+ testkeya testkeyb testkeyc
  "
 else
   KEYLIST="'$TESTKEY'"
@@ -175,20 +186,27 @@ fi
 # This one only works if you have a production key (test key is 
 # playpen only).  Note quoting to allow '.' in the name.
 # '"onepassword::Hosting and Filtering::ldap:dovecot@xmd.smxemail.com"' \
-for TESTKEY in $KEYLIST
+echo "puppet::version: plain hiera text item in common yaml files"
+echo "onepassword items: specific vault, no vault, wildcard vault, disable exact matching"
+echo "testkeya: plain hiera text item"
+echo "testkeyb: lookup() to onepass item"
+echo "testkeyc: alias() to onepass item"
+
+for T in $KEYLIST
 do
-
-echo Retrieving $TESTKEY for $TESTHOST
-export SSL_NO_VERIFY=True
-$PUPPET lookup $DEBUG --environment "$ENVIRONMENT" \
-  --node "$TESTHOST" --facts "$FACTS"  "$TESTKEY"
-rv=$?
-if [ $rv -ne 0 ]; then
-  echo "EXIT STATUS: $rv"
-  exit 1
-fi
-
+  TESTKEY=`echo $T|tr '_' ' '`
+  echo "Retrieving [$TESTKEY] for $TESTHOST"
+  export SSL_NO_VERIFY=True
+  $PUPPET lookup $DEBUG --environment "$ENVIRONMENT" \
+    --node "$TESTHOST" --facts "$FACTS" --render-as $FORMAT \
+    "'$TESTKEY'"
+  rv=$?
+  if [ $rv -ne 0 ]; then
+    echo "EXIT STATUS: $rv"
+    exit 1
+  fi
 done
+
 
 rmfacts
 

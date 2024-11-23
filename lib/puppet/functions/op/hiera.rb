@@ -39,6 +39,7 @@ Puppet::Functions.create_function(:'op::hiera') do
       Optional[vault]    => String,
       Optional[exact]    => Boolean,
       Optional[cache]    => Boolean,
+      Optional[length]   => Integer,
     }]', :options
     param 'Puppet::LookupContext', :context
     return_type 'Variant[String,Undef]'
@@ -56,7 +57,7 @@ Puppet::Functions.create_function(:'op::hiera') do
       begin
         regex_key_match = Regexp.new("^#{key_base}::")
       rescue StandardError => e
-        raise ArgumentError, "creating regexp failed with: #{e}"
+        raise ArgumentError, "creating regexp for key_base failed with: #{e}"
       end
       unless regex_key_match.match(secret_name)
         context.explain { "OP: Skipping op backend because secret_name '#{secret_name}' is not in namespace '#{key_base}'" }
@@ -67,29 +68,30 @@ Puppet::Functions.create_function(:'op::hiera') do
     end
 
     # Determine secret_key, splitting by ::
+    secret_name_exp = context.interpolate(secret_name)
     if options['exact'].nil?
       exact = true
     else
       exact = options['exact']
     end
     create = false
-    keyarr = secret_name.split(/::/, -1)
+    keyarr = secret_name_exp.split(/::/, -1)
     if keyarr.length < 2 
-      context.explain { "OP: Secret name #{secret_name} must match #{key_base}::[vaultname::]secretname[::exact]" }
+      context.explain { "OP: Secret name #{secret_name_exp} must match #{key_base}::[vaultname::]secretname[::exact]" }
       return "BAD-FORMAT-IDENTIFIER"
 
-      raise ArgumentError, "OP: Secret name #{secret_name} must match #{key_base}::[vaultname::]secretname[::exact]"
+      raise ArgumentError, "OP: Secret name #{secret_name_exp} must match #{key_base}::[vaultname::]secretname[::exact]"
     end
     if keyarr.length < 3
       vault = options['vault']
-      secret_title = context.interpolate(keyarr[1])
+      secret_title = keyarr[1]
     else
       if keyarr[1] == '*'
         vault = nil
       else
         vault = keyarr[1]
       end 
-      secret_title = context.interpolate(keyarr[2])
+      secret_title = keyarr[2]
       if keyarr.length > 3
         if keyarr[3] == 'false'
           exact = false
@@ -99,16 +101,16 @@ Puppet::Functions.create_function(:'op::hiera') do
           exact = true
           create = true
         else
-          context.explain { "OP: Secret name #{secret_name} final option can only be true, false, or create" }
+          context.explain { "OP: Secret name #{secret_name_exp} final option can only be true, false, or create" }
           return "BAD-FORMAT-IDENTIFIER"
-          raise ArgumentError, "OP: Secret name #{secret_name} final option can only be true, false, or create"
+          raise ArgumentError, "OP: Secret name #{secret_name_exp} final option can only be true, false, or create"
         end
       end
     end
 
     # Handle cached secrets, if we have enabled caching
     if options['cache']
-      return context.cached_value(secret_name) if context.cache_has_key(secret_name)
+      return context.cached_value(secret_name_exp) if context.cache_has_key(secret_name_exp)
     end
 
     # Search
@@ -185,9 +187,12 @@ Puppet::Functions.create_function(:'op::hiera') do
     # not found
     if secretvalue.nil?
       if create
-        # create the secret and return it
-        secretvalue = rand.to_s  + $$.to_s + Time.now.to_s 
-        secretvalue.crypt(Time.now.sec.to_s*2)[-16,16]
+        if options['length'].nil?
+          length = 16
+        else
+          length = options['length']
+        end
+        secretvalue = SecureRandom.alphanumeric(length)
 
         vault = Puppet::Util::OnePassword.op_default_vault() if vault.nil?
         vaultid = nil
@@ -203,13 +208,13 @@ Puppet::Functions.create_function(:'op::hiera') do
         end
          
         # Identify username, if we can
-        username = secret_name.sub( /@.*/, "" ).sub( /^.*:\/*/, "" )
+        username = secret_title.sub( /@.*/, "" ).sub( /^.*:\/*/, "" )
 
         # Create the item
         begin
           item = op.create_item(vault_id: vaultid, 
             category: 'LOGIN', tags: [ 'puppet' ],
-            title: secret_name,
+            title: secret_title,
             fields: [
               {
                 id: "username",
@@ -229,18 +234,18 @@ Puppet::Functions.create_function(:'op::hiera') do
             ]
           )
         rescue => error
-          Puppet.send_log(:err, "OP: Failed to create item #{secretname} - #{error.message}" )
-          raise Puppet::Error, "OP: Unable to create new item in vault #{vault}"
+          Puppet.send_log(:err, "OP: Failed to create item #{vault}::#{secret_title} - #{error.message}" )
+          raise Puppet::Error, "OP: Unable to create new item #{secret_title} in vault #{vault}"
           context.not_found
         end
         if item.nil?
-          Puppet.send_log(:err, "OP: Failed to create item #{secretname} in #{vault}" )
-          raise Puppet::Error, "OP: 1Password item create ERROR for #{secretname} in #{vault}" 
+          Puppet.send_log(:err, "OP: Failed to create item #{secret_title} in #{vault}" )
+          raise Puppet::Error, "OP: 1Password item create ERROR for #{secret_title} in #{vault}" 
           context.not_found
         else
-          Puppet.send_log(:info, "OP: Created new secret #{secretname}" )
+          Puppet.send_log(:info, "OP: Created new secret #{secret_title} in #{vault}" )
           context.explain { "OP: Created new #{secret_title} #{msg}" }
-          return context.cache(secret_name, secretvalue)
+          return context.cache(secret_name_exp, secretvalue)
         end
 
       else
@@ -252,6 +257,6 @@ Puppet::Functions.create_function(:'op::hiera') do
 
     # Return the secret, and cache it for next time
     context.explain { "OP: Found #{secret_title} #{msg}" }
-    return context.cache(secret_name, secretvalue)
+    return context.cache(secret_name_exp, secretvalue)
   end
 end

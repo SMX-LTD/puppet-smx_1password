@@ -9,6 +9,8 @@
 # %{lookup('onepassword::Playpen::sjs@test1')}
 # %{lookup('onepassword::*::sjs@test1')}
 # %{lookup('onepassword::Playpen::fuzzy match::false')}
+# %{lookup('onepassword::Playpen::newkey::create')}
+# %{lookup('onepassword::Playpen::newkey-%{::site}::create')}
 
 DEBUG=--debug
 DEBUG=
@@ -17,22 +19,22 @@ TESTROLE=core_inf
 TESTSITE=xmt
 TESTHOST=${TESTSITE}inf01
 TESTKEY=""
-BASE=$HOME/.puppetlabs
+BASE=$HOME/.puppet
 if [ ! -d $BASE ]; then
   BASE=/etc/puppetlabs
 fi
-ENVDIR=$BASE/etc/code/environments
+ENVDIR=$BASE/code/environments
 ENVIRONMENT=test
 HIERAFILE=$ENVDIR/$ENVIRONMENT/hiera.yaml
 MODDIR=$ENVDIR/$ENVIRONMENT/modules
 PKCSPUB=$HOME/config/puppet-public.pem
 PKCSPVT=$HOME/config/puppet-private.pem
 LIBCACHEDIR=/opt/puppetlabs/puppet/cache
-OPCONFIG=$BASE/etc/puppet/1password.yaml
+OPCONFIG=$BASE/etc/1password.yaml
 
 FACTS=/tmp/facts.$$
-PUPPET=/opt/puppetlabs/puppet/bin/puppet
-GEM=/opt/puppetlabs/puppet/bin/gem
+PUPPET=/usr/bin/puppet
+GEM=gem
 
 makefacts()
 {
@@ -165,8 +167,12 @@ if [ "$TESTKEY" == "" ]; then
  'onepassword::Playpen::sjs@test1' \
  'onepassword::sjs@test1' \
  'onepassword::*::sjs@test1' \
- 'onepassword::Playpen::fuzzy match::false' \
- 'testkeya' 'testkeyb' 
+ 'onepassword::Playpen::fuzzy::false' \
+ 'onepassword::Playpen::fuzzy::true' \
+ 'testkeya' 'testkeyb'  \
+ 'onepassword::Playpen::donotcreate' \
+ 'onepassword::Playpen::create::create' \
+ 'onepassword::Playpen::createinterpolated-%{::site}::create' \
  "
 else
   KEYLIST="'$TESTKEY'"
@@ -185,7 +191,7 @@ $PUPPET lookup $DEBUG --environment "$ENVIRONMENT" \
 rv=$?
 if [ $rv -ne 0 ]; then
   echo "EXIT STATUS: $rv"
-  exit 1
+#  exit 1
 fi
 
 done

@@ -230,12 +230,12 @@ Puppet::Functions.create_function(:'op::hiera') do
           )
         rescue => error
           Puppet.send_log(:err, "OP: Failed to create item #{secretname} - #{error.message}" )
-          raise ArgumentError, "OP: Unable to create new item in vault #{vault}"
+          raise Puppet::Error, "OP: Unable to create new item in vault #{vault}"
           context.not_found
         end
         if item.nil?
           Puppet.send_log(:err, "OP: Failed to create item #{secretname} in #{vault}" )
-          raise( "unknown: 1Password item create ERROR for #{secretname} in #{vault}" )
+          raise Puppet::Error, "OP: 1Password item create ERROR for #{secretname} in #{vault}" 
           context.not_found
         else
           Puppet.send_log(:info, "OP: Created new secret #{secretname}" )

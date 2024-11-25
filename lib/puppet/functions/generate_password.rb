@@ -8,8 +8,7 @@ Puppet::Functions.create_function(:'generate_password') do
     else
       pwlen = 10
     end
-    pass = rand.to_s  + $$.to_s + Time.now.to_s 
-    pass.crypt(Time.now.sec.to_s*2)[-pwlen,pwlen]
+    SecureRandom.alphanumeric(length)
   end
 end
 
